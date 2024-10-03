@@ -3,7 +3,8 @@ name: Create and publish a Docker image
 
 on:
 # Configures this workflow to run every time a change is pushed to the branch called `release`.
-#   push:
+  push:
+    branches: ['3-create-docker-image']
 #     branches: ['release']
     
   # Allows you to run this workflow manually from the Actions tab
