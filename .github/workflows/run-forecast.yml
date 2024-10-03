@@ -27,7 +27,11 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    container: ghcr.io/epiforesite/epiworld-forecasts
+    container:
+      image: ghcr.io/epiforesite/epiworld-forecasts
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.github_token }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
