@@ -1,7 +1,7 @@
 {
-	"name": "Epiworld",
-	// "image": "mcr.microsoft.com/devcontainers/base:ubuntu"
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	// Dev container name
+	"name": "Epiworld Forecasts",
+	// Build image from Dockerfile
 	"build": {
 			// Path is relative to the devcontainer.json file.
 			"dockerfile": "Dockerfile"
