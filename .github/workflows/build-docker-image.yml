@@ -2,9 +2,10 @@
 name: Create and publish a Docker image
 
 on:
-# Configures this workflow to run every time a change is pushed to the branch called `release`.
+# Configures this workflow to run every time a change is pushed to the .devcontainer/ folder
   push:
-    branches: ['3-create-docker-image']
+    paths:
+      - '.devcontainer/Dockerfile'
     
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
