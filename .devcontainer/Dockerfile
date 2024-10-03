@@ -2,5 +2,5 @@
 # - R, quarto, data.table, ggplot2
 FROM rocker/tidyverse:4.4.1
 
-# Install epiworld
+# Install epiworldR
 RUN install2.r epiworldR
