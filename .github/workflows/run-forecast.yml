@@ -21,20 +21,20 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Defines two custom environment variables for the workflow. 
-# These are used for the Container registry domain, and the Docker image that this workflow run on.
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+    permissions:
+      contents: read
+      packages: read
+      attestations: read
+      # 
     container:
-      image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      image: ghcr.io/epiforesite/epiworld-forecasts
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
