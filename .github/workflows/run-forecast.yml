@@ -31,7 +31,7 @@ jobs:
       image: ghcr.io/epiforesite/epiworld-forecasts
       credentials:
         username: ${{ github.actor }}
-        password: ${{ secrets.github_token }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
