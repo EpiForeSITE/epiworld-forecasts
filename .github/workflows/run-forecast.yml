@@ -34,7 +34,7 @@ jobs:
       attestations: read
       # 
     container:
-      image: ghcr.io/epiforesite/epiworld-forecasts
+      image: ghcr.io/epiforesite/epiworld-forecasts:sha256-5627077e69d3135a88f2290ec3dc45c11c5e7a48f9529e9d58bbc196fda8b5b3
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
