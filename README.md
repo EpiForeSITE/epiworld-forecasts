@@ -15,8 +15,8 @@ We are currently planning to use the [weekly reports](https://coronavirus.utah.g
 In the future, we may use Germ Watch or additional public data sources.
 
 ## Building Container Image
-Use the Dockerfile in [`.devcontainer/`] to build the `epiworld-forecasts` image. 
-The image includes [`rocker/tidyverse`](https://rocker-project.org/images/versioned/rstudio.html) and [`epiworldR`](https://github.com/UofUEpiBio/epiworldR). 
+Use the Dockerfile in [`.devcontainer/`] to build the `epiworld-forecasts` image.
+The image includes [`rocker/tidyverse`](https://rocker-project.org/images/versioned/rstudio.html) and [`epiworldR`](https://github.com/UofUEpiBio/epiworldR).
 It is stored on the Github Container Registry (`ghcr.io/`).
 
 **Note for macOS users (M-series chip):** Pulling and building the `rocker/tidyverse` image may require specifying the platform with `--platform=linux/amd64`
