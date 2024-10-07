@@ -27,17 +27,7 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
-    permissions:
-      contents: read
-      packages: read
-      attestations: read
-      # 
-    container:
-      image: ghcr.io/epiforesite/epiworld-forecasts:sha256-5627077e69d3135a88f2290ec3dc45c11c5e7a48f9529e9d58bbc196fda8b5b3
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    container: ghcr.io/epiforesite/epiworld-forecasts
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
