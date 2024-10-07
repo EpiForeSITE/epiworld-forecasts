@@ -18,7 +18,8 @@ repos:
           [
             '--ignore-start="^# styler: off$"',
             '--ignore-stop="^# styler: on$"',
-            '--strict=FALSE'
+            '--strict=FALSE',
+            '--cache-root=styler-perm'
             ]
       - id: lintr
         args: [--warn_only]
