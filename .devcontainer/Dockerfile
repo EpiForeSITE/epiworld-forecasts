@@ -4,3 +4,6 @@ FROM rocker/tidyverse:4.4.1
 
 # Install epiworldR
 RUN install2.r epiworldR
+
+# Run Bash
+CMD ["bash"]

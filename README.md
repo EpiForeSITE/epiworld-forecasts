@@ -19,4 +19,4 @@ Use the Dockerfile in [`.devcontainer/`] to build the `epiworld-forecasts` image
 The image includes [`rocker/tidyverse`](https://rocker-project.org/images/versioned/rstudio.html) and [`epiworldR`](https://github.com/UofUEpiBio/epiworldR). 
 It is stored on the Github Container Registry (`ghcr.io/`).
 
-**Note for macOS users:** Pulling and building the `rocker/tidyverse` image require specifying the platform with `--platform=linux/amd64`
+**Note for macOS users (M-series chip):** Pulling and building the `rocker/tidyverse` image may require specifying the platform with `--platform=linux/amd64`
