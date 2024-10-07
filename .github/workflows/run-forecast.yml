@@ -40,9 +40,13 @@ jobs:
       # Checks-out repository under $GITHUB_WORKSPACE, so the job can access it
       - uses: actions/checkout@v4
 
+      # Run Render command
+      - name: Render forecast from Rmarkdown file
+        run: Rscript -e 'rmarkdown::render("forecast.Rmd")'
+
       # Installs Quarto
-      - name: Setup Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
+      # - name: Setup Quarto
+      #   uses: quarto-dev/quarto-actions/setup@v2
 
       # # Setting up the environment
       # - name: Setup GitHub Pages

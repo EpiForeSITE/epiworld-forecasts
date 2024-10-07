@@ -1,0 +1,10 @@
+---
+title: Epiworld Forecast
+author: EpiForeSITE
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+## Epiworld Forecast
+
+This is the weekly (disease_name) forecast using epiworld.
