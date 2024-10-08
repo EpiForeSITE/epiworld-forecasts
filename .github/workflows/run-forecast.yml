@@ -40,8 +40,35 @@ jobs:
       # Checks-out repository under $GITHUB_WORKSPACE, so the job can access it
       - uses: actions/checkout@v4
 
+      # Replace with quarto build steps once quarto website is created
       - name: Render forecast from Rmarkdown file
-        run: Rscript -e 'rmarkdown::render("forecast.Rmd")'
+        run: Rscript -e 'rmarkdown::render("forecast.Rmd",output_dir='docs/build/html/')'
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4
+
+      # Upload website artifact
+      - name: Upload artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          name: github-pages
+          path: docs/build/html/
+
+  # Deploy to the github-pages environment
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    needs: build
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      with:
+        artifact_name: github-pages
+        preview: true
