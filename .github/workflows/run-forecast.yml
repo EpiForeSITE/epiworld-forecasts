@@ -7,7 +7,9 @@ on:
   push:
     branches:
       - "main"
-      - "8-write-github-action-to-push-quarto-website-to-github-page" # TODO: Remove before merge
+  pull_request:
+    branches:
+      - "main"
 
   # Schedule action to run weekly
   #  at specific UTC times using POSIX cron syntax
@@ -56,6 +58,8 @@ jobs:
 
   # Deploy to the github-pages environment
   deploy:
+    # Don't deploy if PR
+    if: ${{ github.event_name != 'pull_request' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
