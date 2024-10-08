@@ -42,7 +42,7 @@ jobs:
 
       # Replace with quarto build steps once quarto website is created
       - name: Render forecast from Rmarkdown file
-        run: Rscript -e 'rmarkdown::render("forecast.Rmd",output_dir='docs/build/html/')'
+        run: Rscript -e 'rmarkdown::render("forecast.Rmd",output_dir="docs/build/html/")'
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4
