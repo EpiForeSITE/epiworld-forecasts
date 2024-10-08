@@ -44,7 +44,9 @@ jobs:
       - name: Render forecast from Rmarkdown file
         run: Rscript -e 'rmarkdown::render("forecast.Rmd")'
 
-      # Installs Quarto
+      # Test Quarto installed in image
+      - name: Test Quarto
+        run: quarto --version
       # - name: Setup Quarto
       #   uses: quarto-dev/quarto-actions/setup@v2
 
