@@ -38,3 +38,6 @@ Temporary Items
 
 # Quarto
 /.quarto/
+
+## Build Files
+/build/html/
