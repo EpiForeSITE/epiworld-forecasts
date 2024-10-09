@@ -1,0 +1,6 @@
+---
+title: "Current Forecast"
+---
+
+This is the current (disease_name) forecast using epiworld.
+Updated weekly.
