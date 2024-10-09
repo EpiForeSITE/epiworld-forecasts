@@ -2,5 +2,5 @@
 title: "Current Forecast"
 ---
 
-This is the current (disease_name) forecast using epiworld.
+This is the current (disease_name) forecast using epiworldR.
 Updated weekly.
