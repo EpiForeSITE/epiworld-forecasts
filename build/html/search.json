@@ -12,5 +12,12 @@
     "title": "Current Forecast",
     "section": "",
     "text": "This is the current (disease_name) forecast using epiworldR. Updated weekly."
+  },
+  {
+    "objectID": "index.html#example-model-summary",
+    "href": "index.html#example-model-summary",
+    "title": "Current Forecast",
+    "section": "Example Model Summary",
+    "text": "Example Model Summary\n\n\n________________________________________________________________________________\n________________________________________________________________________________\nSIMULATION STUDY\n\nName of the model   : Susceptible-Infected-Removed (SIR) (connected)\nPopulation size     : 50000\nAgents' data        : (none)\nNumber of entities  : 0\nDays (duration)     : 0 (of 0)\nNumber of viruses   : 1\nLast run elapsed t  : -\nRewiring            : off\n\nGlobal events:\n (none)\n\nVirus(es):\n - COVID-19 (baseline prevalence: 0.01%)\n\nTool(s):\n (none)\n\nModel parameters:\n - Contact rate      : 2.0000\n - Recovery rate     : 0.3333\n - Transmission rate : 0.5000"
   }
 ]
