@@ -1,9 +1,16 @@
 [
   {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "Epidemiological Forecasting for Utah using Epiworld"
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Current Forecast",
     "section": "",
-    "text": "Epidemiological Forecasting for Utah using Epiworld"
+    "text": "This is the current (disease_name) forecast using epiworldR. Updated weekly."
   }
 ]
