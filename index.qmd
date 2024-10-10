@@ -22,3 +22,27 @@ model_sir <- ModelSIRCONN(
 # Printing Model Summary
 summary(model_sir)
 ```
+
+## Example Dataset
+```{r}
+temp <- tempfile()
+download.file(
+  "https://coronavirus-dashboard.utah.gov/Utah_COVID19_data.zip",
+  temp
+)
+datafile_name <- grep(
+  "Trends_Epidemic+",
+  unzip(temp, list = TRUE)$Name,
+  ignore.case = TRUE,
+  value = TRUE
+)
+print(datafile_name)
+## TODO: If we need to read multiple files,
+## we need graceful failure if one file
+## doesn't exist or isn't titled as expected
+datafile <- unz(temp, datafile_name)
+data <- read.csv(datafile)
+unlink(temp)
+
+print(data)
+```
