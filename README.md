@@ -25,9 +25,6 @@ It's worth also taking a look at:
 - [RSV Forecast Hub](https://rsvforecasthub.org/#Overview)
 - [Epinowcast](https://www.epinowcast.org) and the Epinowcast [community forums](https://community.epinowcast.org)
 
-## Building Container Image
-Use the Dockerfile in [`.devcontainer/`] to build the `epiworld-forecasts` image.
-The image includes [`rocker/tidyverse`](https://rocker-project.org/images/versioned/rstudio.html) and [`epiworldR`](https://github.com/UofUEpiBio/epiworldR).
-It is stored on the Github Container Registry (`ghcr.io/`).
+## Code of Conduct
 
-**Note for macOS users (M-series chip):** Pulling and building the `rocker/tidyverse` image may require specifying the platform with `--platform=linux/amd64`
+Please note that the epiworld-forecasts project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms. More information about how to contribute to the project can be found under [`DEVELOPMENT.md`](DEVELOPMENT.md).
