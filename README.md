@@ -27,4 +27,4 @@ It's worth also taking a look at:
 
 ## Code of Conduct
 
-Please note that the epiworld-forecasts project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms. More information about how to contribute to the project can be found under [`DEVELOPMENT.md`](DEVELOPMENT.md).
+Please note that the epiworld-forecasts project is released with a [Contributor Code of Conduct](./CODE_OF_CONDUCT.md). By contributing to this project, you agree to abide by its terms. More information about how to contribute to the project can be found under [`DEVELOPMENT.md`](DEVELOPMENT.md).
