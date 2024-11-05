@@ -38,7 +38,8 @@ plot(
   y = data$Daily.Cases,
   xlab = "Date",
   ylab = "Daily Cases",
-  main = "Daily COVID-19 Cases in Utah")
+  main = "Daily COVID-19 Cases in Utah"
+)
 ```
 
 ## Epiworld Forecast
