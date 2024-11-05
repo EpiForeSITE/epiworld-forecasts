@@ -7,8 +7,9 @@ website:
   navbar:
     left:
       - href: index.qmd
-        text: Home
-      - about.qmd
+        text: Weekly COVID-19 Forecast
+      - href: about.qmd
+        text: About
 
 format:
   html:

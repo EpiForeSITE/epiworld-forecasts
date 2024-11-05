@@ -2,4 +2,4 @@
 title: "About"
 ---
 
-Epidemiological Forecasting for Utah using Epiworld
+We are using [epiworldR](https://github.com/UofUEpiBio/epiworldR) (a fast, agent-based modeling tool for epidemiological simulations) to generate disease forecasts for Utah that update automatically.
