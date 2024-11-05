@@ -16,26 +16,15 @@ The forecast was last updated on {{< meta date >}}.
 Utah DHHS publishes weekly surveillance data on their [Coronavirus Dashboard](https://coronavirus.utah.gov/case-counts/).
 Below are the daily COVID-19 case counts from March 18, 2020 to {{< meta date >}}.
 ```{r}
-# Grab and extract the zipped case data
-temp <- tempfile()
-download.file(
-  "https://coronavirus-dashboard.utah.gov/Utah_COVID19_data.zip",
-  temp
-)
-datafile_name <- grep(
-  "Trends_Epidemic+",
-  unzip(temp, list = TRUE)$Name,
-  ignore.case = TRUE,
-  value = TRUE
-)
-datafile <- unz(temp, datafile_name)
-data <- read.csv(datafile)
-unlink(temp)
-
+#| echo: false
+#| eval: true
+#| file: get-forecast-data.R
+```
+```{r}
 # Plot the observed data
 plot(
-  x = as.Date(data$Date),
-  y = data$Daily.Cases,
+  x = as.Date(forecast_data$Date),
+  y = forecast_data$Daily.Cases,
   xlab = "Date",
   ylab = "Daily Cases",
   main = "Daily COVID-19 Cases in Utah"
