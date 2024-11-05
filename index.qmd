@@ -17,9 +17,6 @@ Utah DHHS publishes weekly surveillance data on their [Coronavirus Dashboard](ht
 Below are the daily COVID-19 case counts from March 18, 2020 to {{< meta date >}}.
 ```{r}
 # Grab and extract the zipped case data
-## TODO: If we need to read multiple files,
-## we need graceful failure if one file
-## doesn't exist or isn't titled as expected
 temp <- tempfile()
 download.file(
   "https://coronavirus-dashboard.utah.gov/Utah_COVID19_data.zip",
