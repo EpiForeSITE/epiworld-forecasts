@@ -62,7 +62,7 @@ model_sir <- ModelSIRCONN(
 summary(model_sir)
 ```
 
-## Methods
+## Methodology
 Here we describe the process used for calibrating the model and generating the forecast.
 
 ## Acknowledgements
