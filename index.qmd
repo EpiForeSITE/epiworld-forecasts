@@ -1,14 +1,22 @@
 ---
-title: "Current Forecast"
+title: "Weekly COVID-19 Forecast for Utah"
+date: last-modified
 execute:
   echo: false
 ---
 
-This is the current (disease_name) forecast using epiworldR.
-Updated weekly.
+## Introduction
 
-## Example Dataset
+This COVID-19 forecast is published weekly.
+Using case data published at the Utah DHHS [Coronavirus Dashboard](https://coronavirus.utah.gov/case-counts/), we calibrate an SIR connected model and simulate it with [epiworldR](https://github.com/UofUEpiBio/epiworldR) to generate the forecast.
+
+The forecast was last updated on {{< meta date >}}.
+
+## Overview of Observed Data
+Utah DHHS publishes weekly surveillance data on their [Coronavirus Dashboard](https://coronavirus.utah.gov/case-counts/).
+Below are the daily COVID-19 case counts from March 18, 2020 to {{< meta date >}}.
 ```{r}
+# Grab and extract the zipped case data
 temp <- tempfile()
 download.file(
   "https://coronavirus-dashboard.utah.gov/Utah_COVID19_data.zip",
@@ -20,18 +28,23 @@ datafile_name <- grep(
   ignore.case = TRUE,
   value = TRUE
 )
-print(datafile_name)
-## TODO: If we need to read multiple files,
-## we need graceful failure if one file
-## doesn't exist or isn't titled as expected
 datafile <- unz(temp, datafile_name)
 data <- read.csv(datafile)
 unlink(temp)
 
-print(data)
+# Plot the observed data
+plot(
+  x = as.Date(data$Date),
+  y = data$Daily.Cases,
+  xlab = "Date",
+  ylab = "Daily Cases",
+  main = "Daily COVID-19 Cases in Utah"
+)
 ```
 
-## Example Model Summary
+## Epiworld Forecast
+We calibrate a SIR Connected model using the above data and run the model in epiworldR.
+Here are the results of a single model run:
 ```{r}
 library(epiworldR)
 model_sir <- ModelSIRCONN(
@@ -46,3 +59,9 @@ model_sir <- ModelSIRCONN(
 # Printing Model Summary
 summary(model_sir)
 ```
+
+## Methodology
+Here we describe the process used for calibrating the model and generating the forecast.
+
+## Acknowledgements
+Here we acknowledge the contributions to the forecast.

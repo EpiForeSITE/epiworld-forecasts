@@ -5,10 +5,12 @@ project:
 website:
   title: "Epiworld Forecasts"
   navbar:
+    logo: logo.png
     left:
       - href: index.qmd
-        text: Home
-      - about.qmd
+        text: Weekly COVID-19 Forecast
+      - href: about.qmd
+        text: About
 
 format:
   html:
