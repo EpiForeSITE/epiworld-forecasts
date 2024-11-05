@@ -61,3 +61,9 @@ model_sir <- ModelSIRCONN(
 # Printing Model Summary
 summary(model_sir)
 ```
+
+## Methods
+Here we describe the process used for calibrating the model and generating the forecast.
+
+## Acknowledgements
+Here we acknowledge the contributions to the forecast.
