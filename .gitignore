@@ -41,3 +41,9 @@ Temporary Items
 
 ## Build Files
 /build/html/
+
+# R Files
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
