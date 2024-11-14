@@ -54,44 +54,85 @@ Now, building a model that changes the transmission rate during the weekdays
 ```{r}
 library(epiworldR)
 
-model_sir <- ModelSIRCONN(
-  name              = "COVID-19",
-  n                 = 500000,
-  prevalence        = 0.00001,
-  contact_rate      = 10,
-  transmission_rate = 0.05,
-  recovery_rate     = 1 / 7
-)
+lfmcmc_simulation_fun <- function(params) {
+  # Extract parameters
+  recovery_rate <- params[1]
+  t_rate_summer <- params[2]
+  t_rate_spring <- params[3]
+  t_rate_fall <- params[4]
+  t_rate_winter <- params[5]
+  contact_rate_weekday <- params[6]
+  contact_rate_weekend <- params[7]
+  contact_rate_holiday <- params[8]
 
-# Add a global event that changes the parameter
-today <- 0L
-crate1 <- 2
-crate2 <- 10
-change_crate <- function(model) {
-  # Check wheter today is a weekday or weekend
-  if (any(c(6, 0) %in% (today %% 7L))) {
-    set_param(model, "Contact rate", crate1)
-  } else {
-    set_param(model, "Contact rate", crate2)
+  # Create model using new recovery_rate
+  ef_model <- ModelSIRCONN(
+    name              = "COVID-19",
+    n                 = 500000,
+    prevalence        = 0.00001,
+    contact_rate      = 10,
+    transmission_rate = 0.05,
+    recovery_rate     = recovery_rate
+  )
+
+  # Add a global event that changes the contact rate parameter
+  contact_rate_day <- 0L
+  change_contact_rate <- function(model) {
+    # Check whether today is a weekday or weekend
+    if (any(c(6, 0) %in% (contact_rate_day %% 7L))) {
+      set_param(model, "Contact rate", contact_rate_weekend)
+    } else {
+      set_param(model, "Contact rate", contact_rate_weekday)
+    }
+
+    # TODO: Add cases to update contact rate for specific holidays (extract from the 90 days of data)
+
+    # You don't want to do this... but
+    # Replace this with the today() method once it is implemented.
+    contact_rate_day <<- contact_rate_day + 1L
+
+    invisible(model)
   }
 
-  # You don't want to do this... but
-  # Replace this with the today() method once it is implemented.
-  today <<- today + 1L
+  globalevent_fun(change_contact_rate, name = "Change Contact Rate") |>
+    add_globalevent(model = ef_model)
 
-  invisible(model)
+  # Add a global event that changes the transmission rate parameter
+  # transmission_rate_day <- 0L
+  # change_transmission_rate <- function(model) {
 
+  #   # TODO: add conditions, highest in the winter
+  #   set_param(model, "Transmission rate", t_rate_summer)
+  #   set_param(model, "Transmission rate", t_rate_spring)
+  #   set_param(model, "Transmission rate", t_rate_fall)
+  #   set_param(model, "Transmission rate", t_rate_winter)
+  #   invisible(model)
+  # }
+
+  # globalevent_fun(change_transmission_rate, name = "Change Transmission Rate") |>
+  #   add_globalevent(model = ef_model)
+
+  # Run the model
+  run(ef_model, ndays = 90, seed = 112)
+
+  # Printing Model Summary (TODO: delete this)
+  summary(ef_model)
+  plot_incidence(ef_model)
+
+  res <- unname(as.integer(get_today_total(ef_model)))
+  return(res)
 }
 
-globalevent_fun(change_crate, name = "Change contact rate") |>
-  add_globalevent(model = model_sir)
-
-# Running the model
-run(model_sir, ndays = 90, seed = 112)
-
-# Printing Model Summary
-summary(model_sir)
-plot_incidence(model_sir)
+lfmcmc_simulation_fun(c(
+  1 / 7, # recovery_rate
+  0.05, # t_rate_summer
+  0.05, # t_rate_spring
+  0.05, # t_rate_fall
+  0.05, # t_rate_winter
+  10, # contact_rate_weekday
+  2, # contact_rate_weekend
+  5 # contact_rate_holiday
+))
 ```
 
 ## Epiworld Forecast
