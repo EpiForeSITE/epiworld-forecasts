@@ -22,6 +22,7 @@ source("get-forecast-data.R")
 data_url <- "https://coronavirus-dashboard.utah.gov/Utah_COVID19_data.zip"
 target_file_regex <- "Trends_Epidemic+"
 forecast_data <- get_forecast_data(data_url, target_file_regex)
+forecast_data$Date <- as.Date(forecast_data$Date)
 # Check for errors
 if (length(forecast_data) > 1) {
   # Plot the observed data
@@ -35,11 +36,68 @@ if (length(forecast_data) > 1) {
 }
 ```
 
+Retrieving only for a few months
+
+```{r}
+library(ggplot2)
+
+# Getting the last 3 months of data
+last_date <- max(forecast_data$Date)
+forecast_data <- forecast_data[forecast_data$Date > (last_date - 90), ]
+ggplot(forecast_data, aes(x = Date, y = Daily.Cases)) +
+  geom_line(aes(group = 1)) +
+  labs(x = "Date", y = "Daily Cases", title = "Daily COVID-19 Cases in Utah")
+```
+
+Now, building a model that changes the transmission rate during the weekdays
+
+```{r}
+library(epiworldR)
+
+model_sir <- ModelSIRCONN(
+  name              = "COVID-19",
+  n                 = 500000,
+  prevalence        = 0.00001,
+  contact_rate      = 10,
+  transmission_rate = 0.05,
+  recovery_rate     = 1 / 7
+)
+
+# Add a global event that changes the parameter
+today <- 0L
+crate1 <- 2
+crate2 <- 10
+change_crate <- function(model) {
+  # Check wheter today is a weekday or weekend
+  if (any(c(6, 0) %in% (today %% 7L))) {
+    set_param(model, "Contact rate", crate1)
+  } else {
+    set_param(model, "Contact rate", crate2)
+  }
+
+  # You don't want to do this... but
+  # Replace this with the today() method once it is implemented.
+  today <<- today + 1L
+
+  invisible(model)
+
+}
+
+globalevent_fun(change_crate, name = "Change contact rate") |>
+  add_globalevent(model = model_sir)
+
+# Running the model
+run(model_sir, ndays = 90, seed = 112)
+
+# Printing Model Summary
+summary(model_sir)
+plot_incidence(model_sir)
+```
+
 ## Epiworld Forecast
 We calibrate a SIR Connected model using the above data and run the model in epiworldR.
 Here are the results of a single model run:
 ```{r}
-library(epiworldR)
 model_sir <- ModelSIRCONN(
   name              = "COVID-19",
   n                 = 50000,
