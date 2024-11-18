@@ -77,7 +77,7 @@ lfmcmc_simulation_fun <- function(params) {
   t_rate_winter <- params[5]
   contact_rate_weekday <- params[6]
   contact_rate_weekend <- params[7]
-  contact_rate_holiday <- params[8]
+  # contact_rate_holiday <- params[8]
 
   # Create model using new recovery_rate
   ef_model <- ModelSIRCONN(
@@ -144,20 +144,30 @@ lfmcmc_simulation_fun <- function(params) {
   summary(ef_model)
   plot_incidence(ef_model)
 
+  # TODO: return infected cases
   res <- unname(as.integer(get_today_total(ef_model)))
   return(res)
 }
 
-lfmcmc_simulation_fun(c(
-  1 / 7, # recovery_rate
-  0.05, # t_rate_spring
-  0.05, # t_rate_summer
-  0.05, # t_rate_fall
-  0.05, # t_rate_winter
-  10, # contact_rate_weekday
-  2, # contact_rate_weekend
-  5 # contact_rate_holiday
-))
+lfmcmc_summary_fun <- function(dat) {
+  # TODO: Extract summary statistics from the data
+  # - time_to_peak (largest)
+  # - size_of_peak (% of pop)
+  # - sd_cases
+  # - mean_cases
+}
+
+init_lfmcmc_params <- c(
+  1 / 7,  # recovery_rate
+  0.05,   # t_rate_spring
+  0.04,   # t_rate_summer
+  0.06,   # t_rate_fall
+  0.05,   # t_rate_winter
+  10,     # contact_rate_weekday
+  2       # contact_rate_weekend
+)
+
+lfmcmc_simulation_fun(init_lfmcmc_params)
 ```
 
 ## Epiworld Forecast
@@ -174,7 +184,7 @@ model_sir <- ModelSIRCONN(
 )
 
 # Printing Model Summary
-summary(model_sir)
+run(model_sir, ndays = 90, seed = 112)
 ```
 
 ## Methodology
