@@ -144,17 +144,28 @@ lfmcmc_simulation_fun <- function(params) {
   summary(ef_model)
   plot_incidence(ef_model)
 
-  # TODO: return infected cases
-  res <- unname(as.integer(get_today_total(ef_model)))
-  return(res)
+  # Return infected cases
+  hist_matrix <- get_hist_total(ef_model)
+  infected_cases <- hist_matrix[grep("Infected", hist_matrix$state), c("date", "counts")]
+  return(infected_cases)
 }
 
+# Expects dat to include case counts in second column
 lfmcmc_summary_fun <- function(dat) {
-  # TODO: Extract summary statistics from the data
-  # - time_to_peak (largest)
-  # - size_of_peak (% of pop)
-  # - sd_cases
-  # - mean_cases
+  # Extract summary statistics from the data
+  cases <- dat[, 2]
+  time_to_peak <- which.max(cases)
+  # TODO: compute as % of pop
+  size_of_peak <- cases[time_to_peak]
+  sd_cases <- sd(cases)
+  mean_cases <- mean(cases)
+  # TODO: Repeat for each season in data
+  return(as.integer(c(
+    time_to_peak,
+    size_of_peak,
+    sd_cases,
+    mean_cases
+  )))
 }
 
 init_lfmcmc_params <- c(
@@ -162,7 +173,7 @@ init_lfmcmc_params <- c(
   0.05,   # t_rate_spring
   0.04,   # t_rate_summer
   0.06,   # t_rate_fall
-  0.05,   # t_rate_winter
+  0.07,   # t_rate_winter
   10,     # contact_rate_weekday
   2       # contact_rate_weekend
 )
