@@ -36,7 +36,7 @@ if (length(forecast_data) > 1) {
 }
 ```
 
-Retrieving only for a few months
+Extracting only the past 90 days:
 
 ```{r}
 library(ggplot2)
@@ -49,10 +49,24 @@ ggplot(forecast_data, aes(x = Date, y = Daily.Cases)) +
   labs(x = "Date", y = "Daily Cases", title = "Daily COVID-19 Cases in Utah")
 ```
 
-Now, building a model that changes the transmission rate during the weekdays
+Creating an LFMCMC model that adjusts contact and transmission rates based on the date:
 
 ```{r}
 library(epiworldR)
+
+model_seed <- 112
+model_ndays <- 90
+# Creating the model
+model_sirconn <- ModelSIRCONN(
+  name              = "COVID-19",
+  n                 = 50000,
+  prevalence        = 0.0001,
+  contact_rate      = 2,
+  transmission_rate = 0.5,
+  recovery_rate     = 1 / 3
+)
+verbose_off(model_sirconn)
+run(model_sirconn, ndays = model_ndays, seed = model_seed)
 
 get_date_season <- function(date) {
   date_month <- as.integer(format(as.Date(date, format = "%d/%m/%Y"), "%m"))
@@ -82,7 +96,7 @@ lfmcmc_simulation_fun <- function(params) {
   # Create model using new recovery_rate
   ef_model <- ModelSIRCONN(
     name              = "COVID-19",
-    n                 = 500000,
+    n                 = 50000,
     prevalence        = 0.00001,
     contact_rate      = 10,
     transmission_rate = 0.05,
@@ -138,27 +152,28 @@ lfmcmc_simulation_fun <- function(params) {
     add_globalevent(model = ef_model)
 
   # Run the model
-  run(ef_model, ndays = 90, seed = 112)
+  verbose_off(ef_model)
+  run(ef_model, ndays = model_ndays, seed = model_seed)
 
   # Printing Model Summary (TODO: delete this)
-  summary(ef_model)
-  plot_incidence(ef_model)
+  # summary(ef_model)
+  # plot_incidence(ef_model)
 
   # Return infected cases
   hist_matrix <- get_hist_total(ef_model)
-  infected_cases <- hist_matrix[grep("Infected", hist_matrix$state), c("date", "counts")]
+  # - model returns 91 values, drop last value
+  infected_cases <- head(hist_matrix[grep("Infected", hist_matrix$state), "counts"], -1)
   return(infected_cases)
 }
 
 # Expects dat to include case counts in second column
 lfmcmc_summary_fun <- function(dat) {
   # Extract summary statistics from the data
-  cases <- dat[, 2]
-  time_to_peak <- which.max(cases)
+  time_to_peak <- which.max(dat)
   # TODO: compute as % of pop
-  size_of_peak <- cases[time_to_peak]
-  sd_cases <- sd(cases)
-  mean_cases <- mean(cases)
+  size_of_peak <- dat[time_to_peak]
+  sd_cases <- sd(dat)
+  mean_cases <- mean(dat)
   # TODO: Repeat for each season in data
   return(as.integer(c(
     time_to_peak,
@@ -166,6 +181,20 @@ lfmcmc_summary_fun <- function(dat) {
     sd_cases,
     mean_cases
   )))
+}
+
+lfmcmc_proposal_fun <- function(params_prev) {
+  res <- params_prev + rnorm(length(params_prev), )
+  return(res)
+}
+
+lfmcmc_kernel_fun <- function(stats_now, stats_obs, epsilon) {
+
+  ans <- sum(mapply(function(v1, v2) (v1 - v2)^2,
+    stats_obs,
+    stats_now))
+
+  return(ifelse(sqrt(ans) < epsilon, 1.0, 0.0))
 }
 
 init_lfmcmc_params <- c(
@@ -178,24 +207,48 @@ init_lfmcmc_params <- c(
   2       # contact_rate_weekend
 )
 
-lfmcmc_simulation_fun(init_lfmcmc_params)
+# lfmcmc_simulation_fun(init_lfmcmc_params)
+
+# Create the LFMCMC model
+lfmcmc_model <- LFMCMC(model_sirconn) |>
+  set_simulation_fun(lfmcmc_simulation_fun) |>
+  set_summary_fun(lfmcmc_summary_fun) |>
+  set_proposal_fun(lfmcmc_proposal_fun) |>
+  set_kernel_fun(lfmcmc_kernel_fun) |>
+  set_observed_data(forecast_data$Daily.Cases)
+```
+
+```{r}
+# Run the LFMCMC simulation
+run_lfmcmc(
+  lfmcmc = lfmcmc_model,
+  params_init_ = init_lfmcmc_params,
+  n_samples_ = 50,
+  epsilon_ = 1.0,
+  seed = model_seed
+)
+
+# Print the results
+par_names <- c(
+  "recovery_rate",
+  "t_rate_spring",
+  "t_rate_summer",
+  "t_rate_fall",
+  "t_rate_winter",
+  "contact_rate_weekday",
+  "contact_rate_weekend"
+)
+set_par_names(lfmcmc_model, par_names)
+
+print(lfmcmc_model)
 ```
 
 ## Epiworld Forecast
 We calibrate a SIR Connected model using the above data and run the model in epiworldR.
 Here are the results of a single model run:
 ```{r}
-model_sir <- ModelSIRCONN(
-  name              = "COVID-19",
-  n                 = 50000,
-  prevalence        = 0.0001,
-  contact_rate      = 2,
-  transmission_rate = 0.5,
-  recovery_rate     = 1 / 3
-)
-
 # Printing Model Summary
-run(model_sir, ndays = 90, seed = 112)
+run(model_sirconn, ndays = model_ndays, seed = model_seed)
 ```
 
 ## Methodology
