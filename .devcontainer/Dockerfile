@@ -3,7 +3,7 @@
 FROM rocker/tidyverse:4.4.1
 
 # Install epiworldR
-RUN install2.r epiworldR
+RUN installGithub.r UofUEpiBio/epiworldR
 
 # Run Bash
 CMD ["bash"]
