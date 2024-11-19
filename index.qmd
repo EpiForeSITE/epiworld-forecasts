@@ -119,8 +119,9 @@ lfmcmc_simulation_fun <- function(params) {
   set_param(ef_model, "Recovery rate", recovery_rate)
 
   # Add a global event that changes the contact rate parameter
-  current_model_day <- 0L
   change_c_and_t_rates <- function(model) {
+    current_model_day <- today(model)
+
     ## Update contact rate
     # Check whether today is a weekday or weekend
     if (any(c(6, 0) %in% (current_model_day %% 7L))) {
@@ -142,10 +143,6 @@ lfmcmc_simulation_fun <- function(params) {
     } else if (current_model_day == winter_start) {
       set_param(model, "Transmission rate", t_rate_winter)
     }
-
-    # You don't want to do this... but
-    # Replace this with the today() method once it is implemented.
-    current_model_day <<- current_model_day + 1L
 
     invisible(model)
   }
@@ -231,7 +228,7 @@ lfmcmc_model <- LFMCMC(ef_model) |>
 run_lfmcmc(
   lfmcmc = lfmcmc_model,
   params_init_ = init_lfmcmc_params,
-  n_samples_ = 500,
+  n_samples_ = 100,
   epsilon_ = 1.0,
   seed = model_seed
 )
