@@ -47,27 +47,8 @@ forecast_data <- forecast_data[forecast_data$Date > (last_date - 90), ]
 ggplot(forecast_data, aes(x = Date, y = Daily.Cases)) +
   geom_line(aes(group = 1)) +
   labs(x = "Date", y = "Daily Cases", title = "Daily COVID-19 Cases in Utah")
-```
 
-Creating an LFMCMC model that adjusts contact and transmission rates based on the date:
-
-```{r}
-library(epiworldR)
-
-model_seed <- 112
-model_ndays <- 90
-# Creating the model
-model_sirconn <- ModelSIRCONN(
-  name              = "COVID-19",
-  n                 = 50000,
-  prevalence        = 0.0001,
-  contact_rate      = 2,
-  transmission_rate = 0.5,
-  recovery_rate     = 1 / 3
-)
-verbose_off(model_sirconn)
-run(model_sirconn, ndays = model_ndays, seed = model_seed)
-
+# Selecting start date of each season from data
 get_date_season <- function(date) {
   date_month <- as.integer(format(as.Date(date, format = "%d/%m/%Y"), "%m"))
 
@@ -81,7 +62,48 @@ get_date_season <- function(date) {
     return("winter")
   }
 }
+forecast_seasons <- mapply(get_date_season, forecast_data$Date)
 
+spring_start <- match("spring", forecast_seasons, nomatch = -1)
+summer_start <- match("summer", forecast_seasons, nomatch = -1)
+fall_start <- match("fall", forecast_seasons, nomatch = -1)
+winter_start <- match("winter", forecast_seasons, nomatch = -1)
+```
+
+Creating an LFMCMC model that adjusts contact and transmission rates based on the date:
+
+```{r}
+library(epiworldR)
+
+# Set parameters
+model_seed <- 112
+model_ndays <- 90
+
+init_lfmcmc_params <- c(
+  1 / 7,  # recovery_rate
+  0.05,   # t_rate_spring
+  0.04,   # t_rate_summer
+  0.06,   # t_rate_fall
+  0.07,   # t_rate_winter
+  10,     # contact_rate_weekday
+  2       # contact_rate_weekend
+)
+
+# Create the base SIRCONN model and run once to ensure it is fully initialized
+ef_model <- ModelSIRCONN(
+  name              = "COVID-19",
+  n                 = 100000,
+  prevalence        = 0.0001,
+  contact_rate      = 10,
+  transmission_rate = 0.05,
+  recovery_rate     = init_lfmcmc_params[1]
+)
+verbose_off(ef_model)
+run(ef_model, ndays = model_ndays, seed = model_seed)
+```
+
+```{r}
+# Define the LFMCMC simulation function
 lfmcmc_simulation_fun <- function(params) {
   # Extract parameters
   recovery_rate <- params[1]
@@ -93,15 +115,8 @@ lfmcmc_simulation_fun <- function(params) {
   contact_rate_weekend <- params[7]
   # contact_rate_holiday <- params[8]
 
-  # Create model using new recovery_rate
-  ef_model <- ModelSIRCONN(
-    name              = "COVID-19",
-    n                 = 500000,
-    prevalence        = 0.00001,
-    contact_rate      = 10,
-    transmission_rate = 0.05,
-    recovery_rate     = recovery_rate
-  )
+  # Set recovery rate
+  set_param(ef_model, "Recovery rate", recovery_rate)
 
   # Add a global event that changes the contact rate parameter
   current_model_day <- 0L
@@ -116,16 +131,15 @@ lfmcmc_simulation_fun <- function(params) {
 
     # TODO: Add cases to update contact rate for specific holidays (extract from the 90 days of data)
 
-    ## Update transmission rate
-    current_season <- get_date_season(forecast_data$Date[current_model_day + 1])
-
-    if (current_season == "spring") {
+    ## Update transmission rate each season
+    # TODO: do we need current_model_day + 1?
+    if (current_model_day == spring_start) {
       set_param(model, "Transmission rate", t_rate_spring)
-    } else if (current_season == "summer") {
+    } else if (current_model_day == summer_start) {
       set_param(model, "Transmission rate", t_rate_summer)
-    } else if (current_season == "fall") {
+    } else if (current_model_day == fall_start) {
       set_param(model, "Transmission rate", t_rate_fall)
-    } else {
+    } else if (current_model_day == winter_start) {
       set_param(model, "Transmission rate", t_rate_winter)
     }
 
@@ -136,23 +150,29 @@ lfmcmc_simulation_fun <- function(params) {
     invisible(model)
   }
 
-  globalevent_fun(change_c_and_t_rates, name = "Change Contact and Transmission Rates") |>
+  change_c_and_t_event_name <- "Change Contact and Transmission Rates"
+  globalevent_fun(change_c_and_t_rates, name = change_c_and_t_event_name) |>
     add_globalevent(model = ef_model)
 
   # Run the model
   verbose_off(ef_model)
   run(ef_model, ndays = model_ndays, seed = model_seed)
 
+  # Clean up the global event so we can set it the next time we run the simulation
+  rm_globalevent(ef_model, change_c_and_t_event_name)
+
   # Printing Model Summary (TODO: delete this)
   # summary(ef_model)
   # plot_incidence(ef_model)
 
   # Return infected cases
-  hist_matrix <- get_hist_total(ef_model)
+  hist_matrix <- get_hist_transition_matrix(ef_model)
   # - model returns 91 values, drop last value
-  infected_cases <- head(hist_matrix[grep("Infected", hist_matrix$state), "counts"], -1)
+  infected_cases <- head(hist_matrix[grep("Infected", hist_matrix$state_to), "counts"], -1)
   return(infected_cases)
 }
+
+# lfmcmc_simulation_fun(init_lfmcmc_params)
 
 # Expects dat to include case counts
 lfmcmc_summary_fun <- function(dat) {
@@ -197,20 +217,8 @@ lfmcmc_kernel_fun <- function(stats_now, stats_obs, epsilon) {
   return(ifelse(sqrt(ans) < epsilon, 1.0, 0.0))
 }
 
-init_lfmcmc_params <- c(
-  1 / 7,  # recovery_rate
-  0.05,   # t_rate_spring
-  0.04,   # t_rate_summer
-  0.06,   # t_rate_fall
-  0.07,   # t_rate_winter
-  10,     # contact_rate_weekday
-  2       # contact_rate_weekend
-)
-
-# lfmcmc_simulation_fun(init_lfmcmc_params)
-
 # Create the LFMCMC model
-lfmcmc_model <- LFMCMC(model_sirconn) |>
+lfmcmc_model <- LFMCMC(ef_model) |>
   set_simulation_fun(lfmcmc_simulation_fun) |>
   set_summary_fun(lfmcmc_summary_fun) |>
   set_proposal_fun(lfmcmc_proposal_fun) |>
@@ -223,7 +231,7 @@ lfmcmc_model <- LFMCMC(model_sirconn) |>
 run_lfmcmc(
   lfmcmc = lfmcmc_model,
   params_init_ = init_lfmcmc_params,
-  n_samples_ = 2000,
+  n_samples_ = 500,
   epsilon_ = 1.0,
   seed = model_seed
 )
@@ -241,6 +249,7 @@ par_names <- c(
 set_par_names(lfmcmc_model, par_names)
 
 print(lfmcmc_model)
+# TODO: Process results as percentage of population, relative to the population size in the model
 ```
 
 ## Epiworld Forecast
@@ -248,7 +257,7 @@ We calibrate a SIR Connected model using the above data and run the model in epi
 Here are the results of a single model run:
 ```{r}
 # Printing Model Summary
-run(model_sirconn, ndays = model_ndays, seed = model_seed)
+# run(ef_model, ndays = model_ndays, seed = model_seed)
 ```
 
 ## Methodology
