@@ -96,7 +96,7 @@ lfmcmc_simulation_fun <- function(params) {
   # Create model using new recovery_rate
   ef_model <- ModelSIRCONN(
     name              = "COVID-19",
-    n                 = 50000,
+    n                 = 500000,
     prevalence        = 0.00001,
     contact_rate      = 10,
     transmission_rate = 0.05,
@@ -104,10 +104,11 @@ lfmcmc_simulation_fun <- function(params) {
   )
 
   # Add a global event that changes the contact rate parameter
-  contact_rate_day <- 0L
-  change_contact_rate <- function(model) {
+  current_model_day <- 0L
+  change_c_and_t_rates <- function(model) {
+    ## Update contact rate
     # Check whether today is a weekday or weekend
-    if (any(c(6, 0) %in% (contact_rate_day %% 7L))) {
+    if (any(c(6, 0) %in% (current_model_day %% 7L))) {
       set_param(model, "Contact rate", contact_rate_weekend)
     } else {
       set_param(model, "Contact rate", contact_rate_weekday)
@@ -115,21 +116,8 @@ lfmcmc_simulation_fun <- function(params) {
 
     # TODO: Add cases to update contact rate for specific holidays (extract from the 90 days of data)
 
-    # You don't want to do this... but
-    # Replace this with the today() method once it is implemented.
-    contact_rate_day <<- contact_rate_day + 1L
-
-    invisible(model)
-  }
-
-  globalevent_fun(change_contact_rate, name = "Change Contact Rate") |>
-    add_globalevent(model = ef_model)
-
-  # Add a global event that changes the transmission rate parameter
-  transmission_rate_day <- 0L
-  change_transmission_rate <- function(model) {
-
-    current_season <- get_date_season(forecast_data$Date[transmission_rate_day + 1])
+    ## Update transmission rate
+    current_season <- get_date_season(forecast_data$Date[current_model_day + 1])
 
     if (current_season == "spring") {
       set_param(model, "Transmission rate", t_rate_spring)
@@ -143,12 +131,12 @@ lfmcmc_simulation_fun <- function(params) {
 
     # You don't want to do this... but
     # Replace this with the today() method once it is implemented.
-    transmission_rate_day <<- transmission_rate_day + 1L
+    current_model_day <<- current_model_day + 1L
 
     invisible(model)
   }
 
-  globalevent_fun(change_transmission_rate, name = "Change Transmission Rate") |>
+  globalevent_fun(change_c_and_t_rates, name = "Change Contact and Transmission Rates") |>
     add_globalevent(model = ef_model)
 
   # Run the model
@@ -166,7 +154,7 @@ lfmcmc_simulation_fun <- function(params) {
   return(infected_cases)
 }
 
-# Expects dat to include case counts in second column
+# Expects dat to include case counts
 lfmcmc_summary_fun <- function(dat) {
   # Extract summary statistics from the data
   time_to_peak <- which.max(dat)
@@ -184,9 +172,21 @@ lfmcmc_summary_fun <- function(dat) {
 }
 
 lfmcmc_proposal_fun <- function(params_prev) {
-  res <- params_prev + rnorm(length(params_prev), )
+  res_1 <- abs(params_prev[1] + rnorm(1, mean = 0, sd = 0.5))
+  res_2_to_5 <- abs(params_prev[2:5] + rnorm(4, mean = 0, sd = 0.1))
+  res_6_to_7 <- abs(params_prev[6:7] + rnorm(2, mean = 0, sd = 1))
+
+  res <- c(
+    res_1,
+    res_2_to_5,
+    res_6_to_7
+  )
+
+  # res <- params_prev + rnorm(length(params_prev), )
   return(res)
 }
+
+# lfmcmc_proposal_fun(init_lfmcmc_params)
 
 lfmcmc_kernel_fun <- function(stats_now, stats_obs, epsilon) {
 
@@ -223,7 +223,7 @@ lfmcmc_model <- LFMCMC(model_sirconn) |>
 run_lfmcmc(
   lfmcmc = lfmcmc_model,
   params_init_ = init_lfmcmc_params,
-  n_samples_ = 50,
+  n_samples_ = 2000,
   epsilon_ = 1.0,
   seed = model_seed
 )
