@@ -7,10 +7,9 @@ execute:
 
 ## Introduction
 
-This COVID-19 forecast is published weekly.
-Using case data published at the Utah DHHS [Coronavirus Dashboard](https://coronavirus.utah.gov/case-counts/), we calibrate an SIR connected model and simulate it with [epiworldR](https://github.com/UofUEpiBio/epiworldR) to generate the forecast.
+Using case data published by the Utah DHHS [Coronavirus Dashboard](https://coronavirus.utah.gov/case-counts/), we calibrate an SIR connected model and simulate it with [epiworldR](https://github.com/UofUEpiBio/epiworldR) to generate a COVID-19 forecast for Utah.
 
-The forecast was last updated on {{< meta date >}}.
+This forecast is published weekly (last updated on {{< meta date >}}).
 
 ## Overview of Observed Data
 Utah DHHS publishes weekly surveillance data on their [Coronavirus Dashboard](https://coronavirus.utah.gov/case-counts/).
@@ -36,19 +35,21 @@ if (length(forecast_data) > 1) {
 }
 ```
 
-Extracting only the past 90 days:
+Our forecast is calibrated on data from the last 90 days.
 
 ```{r}
 library(ggplot2)
 
-# Getting the last 3 months of data
+# Get data from last 90 days
 last_date <- max(forecast_data$Date)
 forecast_data <- forecast_data[forecast_data$Date > (last_date - 90), ]
+
+# Plot
 ggplot(forecast_data, aes(x = Date, y = Daily.Cases)) +
   geom_line(aes(group = 1)) +
   labs(x = "Date", y = "Daily Cases", title = "Daily COVID-19 Cases in Utah")
 
-# Selecting start date of each season from data
+# Identify the start date of each season (spring, summer, fall, winter) in data
 get_date_season <- function(date) {
   date_month <- as.integer(format(as.Date(date, format = "%d/%m/%Y"), "%m"))
 
@@ -70,14 +71,24 @@ fall_start <- match("fall", forecast_seasons, nomatch = -1)
 winter_start <- match("winter", forecast_seasons, nomatch = -1)
 ```
 
-Creating an LFMCMC model that adjusts contact and transmission rates based on the date:
+## Calibrating the Forecasting Model
+We use Likelihood-Free Markhov Chain Monte Carlo (LFMCMC) to calibrate a model in epiworldR.
+The LFMCMC estimates the following 7 model parameters:
+- Recovery rate
+- Transmission rates for each season (spring, summer, fall, winter)
+- Contact rates for weekdays and weekends
+
+For the sake of speed, we run the model with 100,000 agents and scale our results proportionally to Utah's total population.
+
+Our LFMCMC runs the SIR connected model with different sets of parameters and compares the output to the daily cases reported by UDHHS.
 
 ```{r}
 library(epiworldR)
 
-# Set parameters
+# Set model parameters
 model_seed <- 112
 model_ndays <- 90
+model_n <- 100000 # model population size
 
 init_lfmcmc_params <- c(
   1 / 7,  # recovery_rate
@@ -89,20 +100,21 @@ init_lfmcmc_params <- c(
   2       # contact_rate_weekend
 )
 
-# Create the base SIRCONN model and run once to ensure it is fully initialized
+# Scale observed data by population size
+utah_n <- 3000000 # estimated population of Utah
+forecast_data_scaled <- forecast_data$Daily.Cases * (model_n / utah_n)
+
+# Create the base SIRCONN model
 ef_model <- ModelSIRCONN(
   name              = "COVID-19",
-  n                 = 100000,
+  n                 = model_n,
   prevalence        = 0.0001,
   contact_rate      = 10,
   transmission_rate = 0.05,
   recovery_rate     = init_lfmcmc_params[1]
 )
-verbose_off(ef_model)
-run(ef_model, ndays = model_ndays, seed = model_seed)
-```
 
-```{r}
+# Setup LFMCMC
 # Define the LFMCMC simulation function
 lfmcmc_simulation_fun <- function(params) {
   # Extract parameters
@@ -113,27 +125,23 @@ lfmcmc_simulation_fun <- function(params) {
   t_rate_winter <- params[5]
   contact_rate_weekday <- params[6]
   contact_rate_weekend <- params[7]
-  # contact_rate_holiday <- params[8]
 
   # Set recovery rate
   set_param(ef_model, "Recovery rate", recovery_rate)
 
   # Add a global event that changes the contact rate parameter
   change_c_and_t_rates <- function(model) {
+    # Get the current model day (step)
     current_model_day <- today(model)
 
-    ## Update contact rate
-    # Check whether today is a weekday or weekend
+    ## Update contact rate based on weekday/weekend
     if (any(c(6, 0) %in% (current_model_day %% 7L))) {
       set_param(model, "Contact rate", contact_rate_weekend)
     } else {
       set_param(model, "Contact rate", contact_rate_weekday)
     }
 
-    # TODO: Add cases to update contact rate for specific holidays (extract from the 90 days of data)
-
     ## Update transmission rate each season
-    # TODO: do we need current_model_day + 1?
     if (current_model_day == spring_start) {
       set_param(model, "Transmission rate", t_rate_spring)
     } else if (current_model_day == summer_start) {
@@ -147,6 +155,7 @@ lfmcmc_simulation_fun <- function(params) {
     invisible(model)
   }
 
+  # Add global event to the model
   change_c_and_t_event_name <- "Change Contact and Transmission Rates"
   globalevent_fun(change_c_and_t_rates, name = change_c_and_t_event_name) |>
     add_globalevent(model = ef_model)
@@ -155,12 +164,8 @@ lfmcmc_simulation_fun <- function(params) {
   verbose_off(ef_model)
   run(ef_model, ndays = model_ndays, seed = model_seed)
 
-  # Clean up the global event so we can set it the next time we run the simulation
+  # Remove global event (will set new event in next simulation run)
   rm_globalevent(ef_model, change_c_and_t_event_name)
-
-  # Printing Model Summary (TODO: delete this)
-  # summary(ef_model)
-  # plot_incidence(ef_model)
 
   # Return infected cases
   hist_matrix <- get_hist_transition_matrix(ef_model)
@@ -169,92 +174,105 @@ lfmcmc_simulation_fun <- function(params) {
   return(infected_cases)
 }
 
-# lfmcmc_simulation_fun(init_lfmcmc_params)
-
-# Expects dat to include case counts
+# Expects dat to be case counts
 lfmcmc_summary_fun <- function(dat) {
   # Extract summary statistics from the data
   time_to_peak <- which.max(dat)
-  # TODO: compute as % of pop
   size_of_peak <- dat[time_to_peak]
-  sd_cases <- sd(dat)
   mean_cases <- mean(dat)
-  # TODO: Repeat for each season in data
-  return(as.integer(c(
+  sd_cases <- sd(dat)
+
+  return(c(
     time_to_peak,
     size_of_peak,
-    sd_cases,
-    mean_cases
-  )))
+    mean_cases,
+    sd_cases
+  ))
 }
 
+# Proposes new parameters for the model
 lfmcmc_proposal_fun <- function(params_prev) {
-  res_1 <- abs(params_prev[1] + rnorm(1, mean = 0, sd = 0.5))
-  res_2_to_5 <- abs(params_prev[2:5] + rnorm(4, mean = 0, sd = 0.1))
-  res_6_to_7 <- abs(params_prev[6:7] + rnorm(2, mean = 0, sd = 1))
+  res_1_to_5 <- plogis(qlogis(params_prev[1:5]) + rnorm(length(params_prev[1:5]), mean = 0, sd = 0.1))
+  res_6_to_7 <- params_prev[6:7] + rnorm(2, mean = 0, sd = 0.1)
+
+  # Reflecting contact rates
+  if (res_6_to_7[1] < 0) {
+    res_6_to_7[1] <- params_prev[6] - (res_6_to_7[1] - params_prev[6])
+  }
+  if (res_6_to_7[2] < 0) {
+    res_6_to_7[2] <- params_prev[7] - (res_6_to_7[2] - params_prev[7])
+  }
 
   res <- c(
-    res_1,
-    res_2_to_5,
+    res_1_to_5,
     res_6_to_7
   )
 
-  # res <- params_prev + rnorm(length(params_prev), )
   return(res)
 }
 
-# lfmcmc_proposal_fun(init_lfmcmc_params)
-
+# Define the LFMCMC kernel function to weight the simulation results against observed data
 lfmcmc_kernel_fun <- function(stats_now, stats_obs, epsilon) {
-
-  ans <- sum(mapply(function(v1, v2) (v1 - v2)^2,
-    stats_obs,
-    stats_now))
-
-  return(ifelse(sqrt(ans) < epsilon, 1.0, 0.0))
+  dnorm(sqrt(sum((stats_now - stats_obs)^2)))
 }
-
+```
+## Create model
+```{r}
 # Create the LFMCMC model
-lfmcmc_model <- LFMCMC(ef_model) |>
+lfmcmc_model <- LFMCMC() |>
   set_simulation_fun(lfmcmc_simulation_fun) |>
   set_summary_fun(lfmcmc_summary_fun) |>
   set_proposal_fun(lfmcmc_proposal_fun) |>
   set_kernel_fun(lfmcmc_kernel_fun) |>
-  set_observed_data(forecast_data$Daily.Cases)
+  set_observed_data(forecast_data_scaled)
 ```
-
+## Run model
 ```{r}
 # Run the LFMCMC simulation
 run_lfmcmc(
   lfmcmc = lfmcmc_model,
   params_init_ = init_lfmcmc_params,
-  n_samples_ = 100,
+  n_samples_ = 5,
   epsilon_ = 1.0,
   seed = model_seed
 )
-
+```
+## Print model
+```{r}
 # Print the results
 par_names <- c(
-  "recovery_rate",
-  "t_rate_spring",
-  "t_rate_summer",
-  "t_rate_fall",
-  "t_rate_winter",
-  "contact_rate_weekday",
-  "contact_rate_weekend"
+  "Recovery rate",
+  "Transmission rate (spring)",
+  "Transmission rate (summer)",
+  "Transmission rate (fall)",
+  "Transmission rate (winter)",
+  "Contact rate (weekday)",
+  "Contact rate (weekend)"
 )
 set_par_names(lfmcmc_model, par_names)
 
+stats_names <- c(
+  "Time to peak",
+  "Size of peak",
+  "Mean (cases)",
+  "Standard deviation (cases)"
+)
+set_stats_names(lfmcmc_model, stats_names)
+
 print(lfmcmc_model)
-# TODO: Process results as percentage of population, relative to the population size in the model
 ```
 
 ## Epiworld Forecast
-We calibrate a SIR Connected model using the above data and run the model in epiworldR.
-Here are the results of a single model run:
+
+After running the LFMCMC simulation, we get the mean estimated parameters and run the SIR connected model with those parameters.
 ```{r}
-# Printing Model Summary
-# run(ef_model, ndays = model_ndays, seed = model_seed)
+# Run with estimated parameters
+params_mean <- get_params_mean(lfmcmc_model)
+cases <- lfmcmc_simulation_fun(params_mean)
+
+# Print Model Summary and Plot Incidence
+summary(ef_model)
+plot_incidence(ef_model)
 ```
 
 ## Methodology
