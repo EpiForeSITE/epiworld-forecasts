@@ -171,7 +171,7 @@ lfmcmc_simulation_fun <- function(params) {
   hist_matrix <- get_hist_transition_matrix(ef_model)
   # - model returns 91 values, drop last value
   infected_cases <- head(hist_matrix[grep("Infected", hist_matrix$state_to), "counts"], -1)
-  return(infected_cases)
+  return(as.double(infected_cases))
 }
 
 # Expects dat to be case counts
@@ -215,9 +215,7 @@ lfmcmc_proposal_fun <- function(params_prev) {
 lfmcmc_kernel_fun <- function(stats_now, stats_obs, epsilon) {
   dnorm(sqrt(sum((stats_now - stats_obs)^2)))
 }
-```
-## Create model
-```{r}
+
 # Create the LFMCMC model
 lfmcmc_model <- LFMCMC() |>
   set_simulation_fun(lfmcmc_simulation_fun) |>
@@ -225,9 +223,7 @@ lfmcmc_model <- LFMCMC() |>
   set_proposal_fun(lfmcmc_proposal_fun) |>
   set_kernel_fun(lfmcmc_kernel_fun) |>
   set_observed_data(forecast_data_scaled)
-```
-## Run model
-```{r}
+
 # Run the LFMCMC simulation
 run_lfmcmc(
   lfmcmc = lfmcmc_model,
@@ -236,9 +232,7 @@ run_lfmcmc(
   epsilon_ = 1.0,
   seed = model_seed
 )
-```
-## Print model
-```{r}
+
 # Print the results
 par_names <- c(
   "Recovery rate",
