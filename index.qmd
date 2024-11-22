@@ -16,6 +16,8 @@ Utah DHHS publishes weekly surveillance data on their [Coronavirus Dashboard](ht
 Below are the daily COVID-19 case counts from March 18, 2020 to {{< meta date >}}.
 
 ```{r}
+#| label: get-data
+#| cache: true
 # Download the Trends data from Utah DHHS
 source("get-forecast-data.R")
 data_url <- "https://coronavirus-dashboard.utah.gov/Utah_COVID19_data.zip"
@@ -83,12 +85,14 @@ For the sake of speed, we run the model with 100,000 agents and scale our result
 Our LFMCMC runs the SIR connected model with different sets of parameters and compares the output to the daily cases reported by UDHHS.
 
 ```{r}
+#| label: preping-the-data
 library(epiworldR)
 
 # Set model parameters
 model_seed <- 112
 model_ndays <- 90
-model_n <- 100000 # model population size
+model_n <- 10000 # model population size
+n_samples <- 1000
 
 init_lfmcmc_params <- c(
   1 / 7,  # recovery_rate
@@ -102,13 +106,15 @@ init_lfmcmc_params <- c(
 
 # Scale observed data by population size
 utah_n <- 3000000 # estimated population of Utah
-forecast_data_scaled <- forecast_data$Daily.Cases * (model_n / utah_n)
+forecast_data_scaled <- forecast_data$Daily.Cases # * (model_n / utah_n)
+```
 
+```{r}
 # Create the base SIRCONN model
 ef_model <- ModelSIRCONN(
   name              = "COVID-19",
   n                 = model_n,
-  prevalence        = 0.0001,
+  prevalence        = forecast_data_scaled[1] / model_n,
   contact_rate      = 10,
   transmission_rate = 0.05,
   recovery_rate     = init_lfmcmc_params[1]
@@ -118,11 +124,11 @@ ef_model <- ModelSIRCONN(
 # Define the LFMCMC simulation function
 lfmcmc_simulation_fun <- function(params) {
   # Extract parameters
-  recovery_rate <- params[1]
-  t_rate_spring <- params[2]
-  t_rate_summer <- params[3]
-  t_rate_fall <- params[4]
-  t_rate_winter <- params[5]
+  recovery_rate        <- params[1]
+  t_rate_spring        <- params[2]
+  t_rate_summer        <- params[3]
+  t_rate_fall          <- params[4]
+  t_rate_winter        <- params[5]
   contact_rate_weekday <- params[6]
   contact_rate_weekend <- params[7]
 
@@ -162,18 +168,26 @@ lfmcmc_simulation_fun <- function(params) {
 
   # Run the model
   verbose_off(ef_model)
-  run(ef_model, ndays = model_ndays, seed = model_seed)
+  run(ef_model, ndays = model_ndays)
 
   # Remove global event (will set new event in next simulation run)
   rm_globalevent(ef_model, change_c_and_t_event_name)
 
   # Return infected cases
   hist_matrix <- get_hist_transition_matrix(ef_model)
+
   # - model returns 91 values, drop last value
-  infected_cases <- head(hist_matrix[grep("Infected", hist_matrix$state_to), "counts"], -1)
+  infected_cases <- head(
+    hist_matrix[grep("Infected", hist_matrix$state_to), "counts"],
+    -1
+  )
+
   return(as.double(infected_cases))
 }
+```
 
+```{r}
+#| label: setting-up-lfmcmc
 # Expects dat to be case counts
 lfmcmc_summary_fun <- function(dat) {
   # Extract summary statistics from the data
@@ -182,18 +196,24 @@ lfmcmc_summary_fun <- function(dat) {
   mean_cases <- mean(dat)
   sd_cases <- sd(dat)
 
-  return(c(
+  c(
     time_to_peak,
     size_of_peak,
     mean_cases,
     sd_cases
-  ))
+  )
 }
 
 # Proposes new parameters for the model
 lfmcmc_proposal_fun <- function(params_prev) {
-  res_1_to_5 <- plogis(qlogis(params_prev[1:5]) + rnorm(length(params_prev[1:5]), mean = 0, sd = 0.1))
+
+  res_1_to_5 <- plogis(
+    qlogis(params_prev[1:5]) +
+      rnorm(length(params_prev[1:5]), mean = 0, sd = 0.1)
+  )
+
   res_6_to_7 <- params_prev[6:7] + rnorm(2, mean = 0, sd = 0.1)
+
 
   # Reflecting contact rates
   if (res_6_to_7[1] < 0) {
@@ -203,33 +223,33 @@ lfmcmc_proposal_fun <- function(params_prev) {
     res_6_to_7[2] <- params_prev[7] - (res_6_to_7[2] - params_prev[7])
   }
 
-  res <- c(
-    res_1_to_5,
-    res_6_to_7
-  )
-
-  return(res)
+  c(res_1_to_5, res_6_to_7)
 }
 
 # Define the LFMCMC kernel function to weight the simulation results against observed data
 lfmcmc_kernel_fun <- function(stats_now, stats_obs, epsilon) {
-  dnorm(sqrt(sum((stats_now - stats_obs)^2)))
+
+  diff <- ((stats_now - stats_obs)^2)^epsilon
+  dnorm(sqrt(sum(diff)))
 }
 
 # Create the LFMCMC model
-lfmcmc_model <- LFMCMC() |>
+lfmcmc_model <- LFMCMC(ef_model) |>
   set_simulation_fun(lfmcmc_simulation_fun) |>
   set_summary_fun(lfmcmc_summary_fun) |>
   set_proposal_fun(lfmcmc_proposal_fun) |>
   set_kernel_fun(lfmcmc_kernel_fun) |>
   set_observed_data(forecast_data_scaled)
+```
 
+```{r}
+#| label: running-lfmcmc
 # Run the LFMCMC simulation
 run_lfmcmc(
   lfmcmc = lfmcmc_model,
   params_init_ = init_lfmcmc_params,
-  n_samples_ = 5,
-  epsilon_ = 1.0,
+  n_samples_ = n_samples,
+  epsilon_ = .25,
   seed = model_seed
 )
 
@@ -253,7 +273,24 @@ stats_names <- c(
 )
 set_stats_names(lfmcmc_model, stats_names)
 
-print(lfmcmc_model)
+print(lfmcmc_model, burnin = n_samples / 2)
+```
+
+Looking into the posterior distribution of the lfmcmc samples
+
+```{r}
+res <- get_accepted_params(lfmcmc_model)
+res <- lapply(seq_along(par_names), \(i) {
+  data.frame(
+    step  = seq_along(nrow(res)),
+    param = par_names[i],
+    value = res[, i]
+  )
+}) |> do.call(what = "rbind")
+
+ggplot(res, aes(y = value, x = step)) +
+  geom_line() +
+  facet_wrap(~param, scales = "free")
 ```
 
 ## Epiworld Forecast
@@ -261,7 +298,11 @@ print(lfmcmc_model)
 After running the LFMCMC simulation, we get the mean estimated parameters and run the SIR connected model with those parameters.
 ```{r}
 # Run with estimated parameters
-params_mean <- get_params_mean(lfmcmc_model)
+# params_mean <- get_params_mean(lfmcmc_model)
+params_mean <- get_accepted_params(lfmcmc_model)
+params_mean <- params_mean[-c(1:(n_samples / 2)), ] |>
+  apply(2, quantile, probs = c(.5))
+
 cases <- lfmcmc_simulation_fun(params_mean)
 
 # Print Model Summary and Plot Incidence
