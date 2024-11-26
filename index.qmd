@@ -16,9 +16,6 @@ Our forecast is calibrated on case counts from the last 90 days.
 ```{r}
 #| label: get-data
 #| cache: true
-#| fig-width: 7
-#| fig-height: 3
-#| fig-align: center
 # Download the Trends data from Utah DHHS
 source("get-forecast-data.R")
 data_url <- "https://coronavirus-dashboard.utah.gov/Utah_COVID19_data.zip"
@@ -29,8 +26,13 @@ forecast_data$Date <- as.Date(forecast_data$Date)
 # Get data from last 90 days
 last_date <- max(forecast_data$Date)
 forecast_data <- forecast_data[forecast_data$Date > (last_date - 90), ]
+```
 
-# Plot
+```{r}
+#| label: plot-data
+#| fig-width: 7
+#| fig-height: 3
+#| fig-align: center
 library(ggplot2)
 ggplot(forecast_data, aes(x = Date, y = Daily.Cases)) +
   geom_line() +
@@ -291,23 +293,20 @@ ggplot(res, aes(y = value, x = step)) +
 
 ## Epiworld Forecast
 
-After running the LFMCMC simulation, we get the mean estimated parameters and run the SIR connected model with those parameters.
+We can now run the forecast.
+We first find the second quantile from the accepted parameters and then run the SIR connected model with those parameters.
 ```{r}
 # Run with estimated parameters
-# params_mean <- get_params_mean(lfmcmc_model)
-params_mean <- get_accepted_params(lfmcmc_model)
-params_mean <- params_mean[-c(1:(n_samples / 2)), ] |>
+accepted_params <- get_accepted_params(lfmcmc_model)
+params_median <- accepted_params[-c(1:(n_samples / 2)), ] |>
   apply(2, quantile, probs = c(.5))
 
-cases <- lfmcmc_simulation_fun(params_mean)
+forecasted_cases <- lfmcmc_simulation_fun(params_median)
 
 # Print Model Summary and Plot Incidence
 summary(ef_model)
 plot_incidence(ef_model)
 ```
 
-## Methodology
-Here we describe the process used for calibrating the model and generating the forecast.
-
 ## Acknowledgements
-Here we acknowledge the contributions to the forecast.
+This forecast was developed jointly by Andrew Pulsipher and George Vega Yon as part of the EpiForeSITE project.
