@@ -285,9 +285,18 @@ res <- lapply(seq_along(par_names), \(i) {
   )
 }) |> do.call(what = "rbind")
 
-ggplot(res, aes(y = value, x = step)) +
-  geom_point() +
+res_r_rate <- res[res$param == par_names[1], ]
+res_t_rate <- res[res$param == par_names[2:5], ]
+res_c_rate <- res[res$param == par_names[6:7], ]
+res_r_c_rate <- rbind(res_r_rate, res_c_rate)
+
+ggplot(res_r_c_rate, aes(x = value, fill = param, ..scaled..)) +
+  geom_density(alpha = .3) +
   facet_wrap(~param, scales = "free") +
+  theme_light()
+
+ggplot(res_t_rate, aes(x = value, fill = param, ..scaled..)) +
+  geom_density(alpha = .3) +
   theme_light()
 ```
 
