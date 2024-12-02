@@ -273,7 +273,7 @@ set_stats_names(lfmcmc_model, stats_names)
 
 print(lfmcmc_model, burnin = n_samples / 2)
 ```
-Here is the posterior distribution of the LFMCMC samples:
+Here is the posterior distribution of the LFMCMC samples with vertical lines representing the initial parameter values.
 ```{r}
 #| label: get-posterior-dist
 res <- get_accepted_params(lfmcmc_model)
@@ -285,18 +285,43 @@ res <- lapply(seq_along(par_names), \(i) {
   )
 }) |> do.call(what = "rbind")
 
+# Extract rates for different plots
 res_r_rate <- res[res$param == par_names[1], ]
-res_t_rate <- res[res$param == par_names[2:5], ]
 res_c_rate <- res[res$param == par_names[6:7], ]
 res_r_c_rate <- rbind(res_r_rate, res_c_rate)
 
-ggplot(res_r_c_rate, aes(x = value, fill = param, y = after_stat(scaled))) +
+res_t_rate <- res[res$param == par_names[2:5], ]
+
+# Generate initial values for vertical lines in each plot
+init_r_c_values <- c(init_lfmcmc_params[6],
+  init_lfmcmc_params[7],
+  init_lfmcmc_params[1])
+init_r_c_names <- c(par_names[6],
+  par_names[7],
+  par_names[1])
+init_r_c_df <- data.frame(param = init_r_c_names,
+  value = init_r_c_values)
+
+init_t_df <- data.frame(param = par_names[2:5],
+  value = init_lfmcmc_params[2:5])
+
+# Plot the recovery and contact rates
+ggplot(res_r_c_rate, aes(x = value,
+  fill = param,
+  y = after_stat(scaled))) +
   geom_density(alpha = .3) +
+  geom_vline(aes(xintercept = value, color = param),
+    data = init_r_c_df) +
   facet_wrap(~param, scales = "free") +
   theme_light()
 
-ggplot(res_t_rate, aes(x = value, fill = param, y = after_stat(scaled))) +
+# Plot the transmission rates
+ggplot(res_t_rate, aes(x = value,
+  fill = param,
+  y = after_stat(scaled))) +
   geom_density(alpha = .3) +
+  geom_vline(aes(xintercept = value, color = param),
+    data = init_t_df) +
   theme_light()
 ```
 
