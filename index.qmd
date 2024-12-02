@@ -75,6 +75,9 @@ In each iteration, it does the following:
 * Runs the model with 10,000 agents and the proposed parameters
 * Compares the output to the UDHHS data and records the result
 
+We note that while the population of Utah over 3 million, we only need to run our model with 10,000 agents.
+This is because we don't expect more than 10,000 COVID-19 cases and the model automatically scales the contact rate to account for the difference between the model population and Utah's population.
+
 ```{r}
 #| label: prep-model
 library(epiworldR)
