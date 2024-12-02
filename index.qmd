@@ -63,15 +63,17 @@ winter_start <- match("winter", forecast_seasons, nomatch = -1)
 
 ## Calibrating the Forecasting Model
 We use epiworldR's implementation of Likelihood-Free Markhov Chain Monte Carlo (LFMCMC) to calibrate the SIR connected model (using ModelSIRCONN from epiworldR) by estimating the following model parameters:
-- Recovery rate
-- Transmission rates for each season (spring, summer, fall, winter)
-- Contact rates for weekdays and weekends
+
+* Recovery rate
+* Transmission rates for each season (spring, summer, fall, winter)
+* Contact rates for weekdays and weekends
 
 The LFMCMC simulation runs for 1,000 iterations.
 In each iteration, it does the following:
-- Proposes a new set of parameter values
-- Runs the model with 10,000 agents and the proposed parameters
-- Compares the output to the UDHHS data and records the result
+
+* Proposes a new set of parameter values
+* Runs the model with 10,000 agents and the proposed parameters
+* Compares the output to the UDHHS data and records the result
 
 ```{r}
 #| label: prep-model
