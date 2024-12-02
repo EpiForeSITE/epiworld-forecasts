@@ -303,12 +303,28 @@ ggplot(res_t_rate, aes(x = value, fill = param, y = after_stat(scaled))) +
 ## Epiworld Forecast
 
 We can now run the forecast.
-We first find the second quantile from the accepted parameters and then run the SIR connected model with those parameters.
+Our model prevalence is set according to the reported case counts of the most recent day of the UDHHS data.
+For the other model parameters, we find the second quantile from the LFMCMC accepted parameters.
+We then run the SIR connected model with the new prevalence and the selected parameters.
+The model runs for two weeks, giving us a 14-day forecast of COVID-19 in Utah.
 ```{r}
-# Run with estimated parameters
+# Compute prevalance based on most recent day
+forecast_prevalence <- forecast_data_cases[90] / model_n
+# Select parameters from second quantile of accepted params
 accepted_params <- get_accepted_params(lfmcmc_model)
 params_median <- accepted_params[-c(1:(n_samples / 2)), ] |>
   apply(2, quantile, probs = c(.5))
+# Create the new model
+ef_model <- ModelSIRCONN(
+  name              = "COVID-19",
+  n                 = model_n,
+  prevalence        = forecast_prevalence,
+  contact_rate      = init_contact_rate,
+  transmission_rate = init_transmission_rate,
+  recovery_rate     = init_lfmcmc_params[1]
+)
+# Run model for 2 weeks
+model_ndays <- 14
 
 forecasted_cases <- lfmcmc_simulation_fun(params_median)
 
