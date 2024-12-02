@@ -41,6 +41,8 @@ Temporary Items
 
 ## Build Files
 /build/html/
+/index_cache/
+/index_files/
 
 # R Files
 .Rproj.user
