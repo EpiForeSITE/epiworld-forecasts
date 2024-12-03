@@ -335,32 +335,7 @@ We can now run the forecast.
 Our model prevalence is set according to the reported case counts of the most recent day of the UDHHS data.
 We then take a sample of n = 50 from the LFMCMC accepted parameters and run the SIR connected model with the new prevalence for each set of parameters.
 Each simulation is for two weeks, giving us a 14-day forecast of COVID-19 in Utah.
-Our forecast is represented by this distribution:
-```{r}
-# # Compute prevalance based on most recent day
-# forecast_prevalence <- forecast_data_cases[90] / model_n
-# # Select parameters from second quantile of accepted params
-# accepted_params <- get_accepted_params(lfmcmc_model)
-# params_median <- accepted_params[-c(1:(n_samples / 2)), ] |>
-#   apply(2, quantile, probs = c(.5))
-# # Create the new model
-# ef_model <- ModelSIRCONN(
-#   name              = "COVID-19",
-#   n                 = model_n,
-#   prevalence        = forecast_prevalence,
-#   contact_rate      = init_contact_rate,
-#   transmission_rate = init_transmission_rate,
-#   recovery_rate     = init_lfmcmc_params[1]
-# )
-# # Run model for 2 weeks
-# model_ndays <- 14
-
-# forecasted_cases <- lfmcmc_simulation_fun(params_median)
-
-# # Print Model Summary and Plot Incidence
-# summary(ef_model)
-# plot_incidence(ef_model)
-```
+Our forecast is represented by the following distribution:
 
 ```{r}
 #| label: run-forecast
