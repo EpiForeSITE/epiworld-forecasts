@@ -173,15 +173,13 @@ lfmcmc_simulation_fun <- function(params) {
 
   # Get infected cases
   hist_matrix <- get_hist_transition_matrix(ef_model)
-  infected_transitions <- hist_matrix[hist_matrix$state_to == "Infected" & hist_matrix$state_from != "Infected", c("date", "counts")]
-  # infected_transitions <- hist_matrix[grep("Infected", hist_matrix$state_to), c("date","counts")]
-  # - We aggregate the 3 values for each day (transition to Infected from each SIR state)
-  # - We also drop the last day of data because the model returns data for (model_ndays + 1) days
-  infected_cases <- head(aggregate(x = infected_transitions,
-    by = list(infected_transitions$date),
-    FUN = sum), -1)
+  # - Drop the last day of data because the model returns data for (model_ndays + 1) days
+  infected_cases <- head(hist_matrix[hist_matrix$state_to == "Infected" &
+    hist_matrix$state_from == "Susceptible",
+  c("counts")],
+  -1)
 
-  return(as.double(infected_cases$counts))
+  return(as.double(infected_cases))
 }
 
 # Define the LFMCMC summary function
