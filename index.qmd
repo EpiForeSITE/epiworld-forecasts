@@ -366,12 +366,14 @@ forecast_dist <- cbind(c(1:model_ndays), forecast_dist)
 forecast_dist <- as.data.frame(forecast_dist)
 sample_names <- paste0("sample_", 1:forecast_sample_n)
 colnames(forecast_dist) <- c("day", sample_names)
-forecast_dist <- forecast_dist %>% pivot_longer(cols = sample_names,
+forecast_dist <- pivot_longer(forecast_dist,
+  cols = sample_names,
   names_to = "sample",
   values_to = "counts")
 
 ggplot(forecast_dist, aes(x = day, y = counts)) +
   geom_line(aes(color = sample)) +
+  geom_smooth(method = glm) +
   labs(x = "Day (step)", y = "Forecasted Cases") +
   theme_classic() +
   theme(legend.position = "none")
