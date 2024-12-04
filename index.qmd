@@ -363,38 +363,60 @@ ef_model <- ModelSIRCONN(
 
 # Run the simulation for each set of params in the sample
 forecast_dist <- apply(params_sample, 1, lfmcmc_simulation_fun)
-
-# Compute median
+# Compute mean and median
+forecast_sample_mean <- apply(forecast_dist, 1, mean)
 forecast_sample_median <- apply(forecast_dist, 1, median)
 
-# TODO: is this needed?
-# - Prepare distribution for plotting
-forecast_dist <- cbind(c(1:model_ndays), forecast_dist)
-forecast_dist <- as.data.frame(forecast_dist)
-sample_names <- paste0("sample_", 1:forecast_sample_n)
-colnames(forecast_dist) <- c("day", sample_names)
+# Compute confidence interval
+confint_fun <- function(x, conf_level = 0.95) {
+  res <- t.test(x, conf.level = conf_level)
+  res <- res$conf.int
+  attributes(res) <- NULL
+  res
+}
+
+fc_95conf_int <- t(apply(forecast_dist, 1, confint_fun))
+fc_50conf_int <- t(apply(forecast_dist, 1,
+  confint_fun, conf_level = 0.5))
 
 # Combine observed data with sample median for plotting forecast
 observed_df <- data.frame(
-  day = 1:90,
-  counts = forecast_data$Daily.Cases,
-  observed = TRUE
+  day = forecast_data$Date[60:90],
+  counts = forecast_data$Daily.Cases[60:90],
+  observed = TRUE,
+  lb_95 = NA,
+  ub_95 = NA,
+  lb_50 = NA,
+  ub_50 = NA
 )
-samp_median_df <- data.frame(
-  day = 91:104,
-  counts = forecast_sample_median,
-  observed = FALSE
+sample_df <- data.frame(
+  day = forecast_data$Date[90] + 1:14,
+  counts = forecast_sample_mean,
+  observed = FALSE,
+  lb_95 = fc_95conf_int[, 1],
+  ub_95 = fc_95conf_int[, 2],
+  lb_50 = fc_50conf_int[, 1],
+  ub_50 = fc_50conf_int[, 2]
 )
 
-forecast_df <- rbind(observed_df, samp_median_df)
+forecast_df <- rbind(observed_df, sample_df)
 
 # Plot forecast
 # Use color-blind-friendly palette:
 cbb_palette <- c("#56B4E9", "#E69F00", "#000000", "#009E73")
 
 ggplot(forecast_df,
-  aes(x = day, y = counts, color = observed)) +
-  geom_line() +
+  aes(x = day)) +
+  geom_ribbon(aes(ymin = lb_95, ymax = ub_95),
+    fill = "grey70",
+    alpha = 0.5,
+    na.rm = TRUE) +
+  geom_ribbon(aes(ymin = lb_50, ymax = ub_50),
+    fill = "grey70",
+    alpha = 0.5,
+    na.rm = TRUE) +
+  geom_point(aes(y = counts, color = observed)) +
+  geom_line(aes(y = counts, color = observed)) +
   geom_vline(aes(xintercept = 90, color = "red")) +
   labs(x = "Day (step)", y = "Forecasted Cases") +
   scale_colour_manual(values = cbb_palette) +
