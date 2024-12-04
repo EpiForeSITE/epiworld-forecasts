@@ -408,12 +408,12 @@ cbb_palette <- c(cbb_light_blue, "black")
 ggplot(forecast_df,
   aes(x = date)) +
   geom_ribbon(aes(ymin = lb_95, ymax = ub_95),
-    fill = "grey70",
-    alpha = 0.5,
+    fill = cbb_light_blue,
+    alpha = 0.4,
     na.rm = TRUE) +
   geom_ribbon(aes(ymin = lb_50, ymax = ub_50),
-    fill = "grey70",
-    alpha = 0.5,
+    fill = cbb_light_blue,
+    alpha = 0.4,
     na.rm = TRUE) +
   geom_point(aes(y = counts,
     color = observed)) +
