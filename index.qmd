@@ -402,7 +402,7 @@ forecast_df <- rbind(observed_df, sample_df)
 
 # Plot forecast
 # Use color-blind-friendly palette:
-cbb_palette <- c("#56B4E9", "#E69F00", "#000000", "#009E73")
+cbb_palette <- c("#56B4E9", "#000000")
 
 ggplot(forecast_df,
   aes(x = day)) +
@@ -418,14 +418,9 @@ ggplot(forecast_df,
     color = observed)) +
   geom_line(aes(y = counts,
     color = observed)) +
-  geom_vline(aes(xintercept = forecast_data$Date[90],
-    color = "red")) +
   labs(x = "Date", y = "Daily Cases") +
   scale_colour_manual(values = cbb_palette,
-    labels = c(
-      "Forecasted Cases",
-      "Forecast Start",
-      "Observed Cases")) +
+    labels = c("Forecasted Cases", "Observed Cases")) +
   scale_y_continuous(n.breaks = 20) +
   theme_bw()
 ```
