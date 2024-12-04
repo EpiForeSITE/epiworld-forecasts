@@ -364,22 +364,40 @@ ef_model <- ModelSIRCONN(
 # Run the simulation for each set of params in the sample
 forecast_dist <- apply(params_sample, 1, lfmcmc_simulation_fun)
 
-# Plot forecast distribution
+# Compute median
+forecast_sample_median <- apply(forecast_dist, 1, median)
+
+# TODO: is this needed?
+# - Prepare distribution for plotting
 forecast_dist <- cbind(c(1:model_ndays), forecast_dist)
 forecast_dist <- as.data.frame(forecast_dist)
 sample_names <- paste0("sample_", 1:forecast_sample_n)
 colnames(forecast_dist) <- c("day", sample_names)
-forecast_dist <- pivot_longer(
-  forecast_dist,
-  cols = sample_names,
-  names_to = "sample",
-  values_to = "counts"
+
+# Combine observed data with sample median for plotting forecast
+observed_df <- data.frame(
+  day = 1:90,
+  counts = forecast_data$Daily.Cases,
+  observed = TRUE
+)
+samp_median_df <- data.frame(
+  day = 91:104,
+  counts = forecast_sample_median,
+  observed = FALSE
 )
 
-ggplot(forecast_dist, aes(x = day, y = counts)) +
-  geom_line(aes(color = sample)) +
-  geom_smooth() +
+forecast_df <- rbind(observed_df, samp_median_df)
+
+# Plot forecast
+# Use color-blind-friendly palette:
+cbb_palette <- c("#56B4E9", "#E69F00", "#000000", "#009E73")
+
+ggplot(forecast_df,
+  aes(x = day, y = counts, color = observed)) +
+  geom_line() +
+  geom_vline(aes(xintercept = 90, color = "red")) +
   labs(x = "Day (step)", y = "Forecasted Cases") +
+  scale_colour_manual(values = cbb_palette) +
   theme_classic() +
   theme(legend.position = "none")
 ```
