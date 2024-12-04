@@ -399,8 +399,9 @@ sample_df <- data.frame(
 )
 
 forecast_df <- rbind(observed_df, sample_df)
-
-# Plot forecast
+```
+```{r}
+#| label: plot-forecast
 # Use color-blind-friendly palette:
 cbb_light_blue <- "#56B4E9"
 cbb_palette <- c(cbb_light_blue, "black")
