@@ -338,7 +338,7 @@ We can now run the forecast.
 Our model prevalence is set according to the reported case counts of the most recent day of the UDHHS data.
 We then take a sample of n = 50 from the LFMCMC accepted parameters and run the SIR connected model with the new prevalence for each set of parameters.
 Each simulation is for two weeks, giving us a 14-day forecast of COVID-19 in Utah.
-Our forecast is represented by the following distribution:
+The forecast mean is shown below along with the 50% and 95% confidence intervals.
 
 ```{r}
 #| label: run-forecast
@@ -380,7 +380,7 @@ fc_sample_me50 <- margin_error(0.75, fc_sample_se)
 
 # Combine observed data with sample median for plotting forecast
 observed_df <- data.frame(
-  day = forecast_data$Date[60:90],
+  date = forecast_data$Date[60:90],
   counts = forecast_data$Daily.Cases[60:90],
   observed = TRUE,
   lb_95 = NA,
@@ -389,7 +389,7 @@ observed_df <- data.frame(
   ub_50 = NA
 )
 sample_df <- data.frame(
-  day = forecast_data$Date[90] + 1:14,
+  date = forecast_data$Date[90] + 0:13,
   counts = fc_sample_mean,
   observed = FALSE,
   lb_95 = fc_sample_mean - fc_sample_me95,
@@ -402,10 +402,11 @@ forecast_df <- rbind(observed_df, sample_df)
 
 # Plot forecast
 # Use color-blind-friendly palette:
-cbb_palette <- c("#56B4E9", "#000000")
+cbb_light_blue <- "#56B4E9"
+cbb_palette <- c(cbb_light_blue, "black")
 
 ggplot(forecast_df,
-  aes(x = day)) +
+  aes(x = date)) +
   geom_ribbon(aes(ymin = lb_95, ymax = ub_95),
     fill = "grey70",
     alpha = 0.5,
