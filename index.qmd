@@ -370,7 +370,9 @@ fc_sample_median <- apply(forecast_dist, 1, median)
 # Compute confidence interval
 # - Standard error
 std_error <- function(x) sd(x) / sqrt(length(x))
-margin_error <- function(ci, se) qt(ci, df = model_ndays - 1) * se
+margin_error <- function(ci, se) {
+  qt(ci, df = model_ndays - 1) * se
+}
 fc_sample_se <- apply(forecast_dist, 1, std_error)
 # - Margin of error
 fc_sample_me95 <- margin_error(0.975, fc_sample_se)
@@ -412,13 +414,20 @@ ggplot(forecast_df,
     fill = "grey70",
     alpha = 0.5,
     na.rm = TRUE) +
-  geom_point(aes(y = counts, color = observed)) +
-  geom_line(aes(y = counts, color = observed)) +
-  geom_vline(aes(xintercept = forecast_data$Date[90], color = "red")) +
-  labs(x = "Day (step)", y = "Forecasted Cases") +
-  scale_colour_manual(values = cbb_palette) +
-  theme_classic() +
-  theme(legend.position = "none")
+  geom_point(aes(y = counts,
+    color = observed)) +
+  geom_line(aes(y = counts,
+    color = observed)) +
+  geom_vline(aes(xintercept = forecast_data$Date[90],
+    color = "red")) +
+  labs(x = "Date", y = "Daily Cases") +
+  scale_colour_manual(values = cbb_palette,
+    labels = c(
+      "Forecasted Cases",
+      "Forecast Start",
+      "Observed Cases")) +
+  scale_y_continuous(n.breaks = 20) +
+  theme_bw()
 ```
 
 ## Acknowledgements
