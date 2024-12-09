@@ -344,15 +344,21 @@ The forecast mean is shown below along with the 50% and 95% confidence intervals
 ```{r}
 #| label: run-forecast
 library(tidyr)
+
 forecast_sample_n <- 200
+
 # Run model for 2 weeks
 model_ndays <- 14
+
 # Compute prevalance based on most recent day
 forecast_prevalence <- forecast_data_cases[90] / model_n
+
 # Select parameters from second quantile of accepted params
 accepted_params <- get_accepted_params(lfmcmc_model)
 burnin_sample <- tail(accepted_params, n = (n_samples - n_burnin))
 params_sample <- burnin_sample[sample(nrow(burnin_sample), forecast_sample_n), ]
+# params_sample <- accepted_params[sample(nrow(accepted_params), forecast_sample_n), ]
+
 # Create the new model
 ef_model <- ModelSIRCONN(
   name              = "COVID-19",
@@ -365,20 +371,9 @@ ef_model <- ModelSIRCONN(
 
 # Run the simulation for each set of params in the sample
 forecast_dist <- apply(params_sample, 1, lfmcmc_simulation_fun)
-# Compute mean and median
-fc_sample_mean <- apply(forecast_dist, 1, mean)
-fc_sample_median <- apply(forecast_dist, 1, median)
 
-# Compute confidence interval
-# - Standard error
-std_error <- function(x) sd(x) / sqrt(length(x))
-margin_error <- function(ci, se) {
-  qt(ci, df = model_ndays - 1) * se
-}
-fc_sample_se <- apply(forecast_dist, 1, std_error)
-# - Margin of error
-fc_sample_me95 <- margin_error(0.975, fc_sample_se)
-fc_sample_me50 <- margin_error(0.75, fc_sample_se)
+# Find 2.5%, 25%, 50%, 75%, and 97.5% quantiles
+forecast_quantiles <- apply(forecast_dist, 1, quantile, probs = c(0.025, 0.25, 0.5, 0.75, 0.975))
 
 # Combine observed data with sample median for plotting forecast
 observed_df <- data.frame(
@@ -392,12 +387,12 @@ observed_df <- data.frame(
 )
 sample_df <- data.frame(
   date = forecast_data$Date[90] + 0:13,
-  counts = fc_sample_mean,
+  counts = forecast_quantiles["50%", ],
   observed = FALSE,
-  lb_95 = fc_sample_mean - fc_sample_me95,
-  ub_95 = fc_sample_mean + fc_sample_me95,
-  lb_50 = fc_sample_mean - fc_sample_me50,
-  ub_50 = fc_sample_mean + fc_sample_me50
+  lb_95 = forecast_quantiles["2.5%", ],
+  ub_95 = forecast_quantiles["97.5%", ],
+  lb_50 = forecast_quantiles["25%", ],
+  ub_50 = forecast_quantiles["75%", ]
 )
 
 forecast_df <- rbind(observed_df, sample_df)
