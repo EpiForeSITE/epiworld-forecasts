@@ -11,6 +11,9 @@ website:
         text: Weekly COVID-19 Forecast
       - href: about.qmd
         text: About
+  repo-url: https://github.com/EpiForeSITE/epiworld-forecasts
+  repo-branch: master
+  repo-actions: [edit, source, issue]
 
 format:
   html:
