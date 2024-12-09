@@ -293,12 +293,31 @@ res <- lapply(seq_along(par_names), \(i) {
   )
 }) |> do.call(what = "rbind")
 
-# Extract rates for different plots
+# Extract contact and recovery rates
 res_r_rate <- res[res$param == par_names[1], ]
 res_c_rate <- res[res$param == par_names[6:7], ]
 res_r_c_rate <- rbind(res_r_rate, res_c_rate)
 
-res_t_rate <- res[res$param == par_names[2:5], ]
+# Select transmission rates to plot
+t_params_used <- character()
+t_values_used <- numeric()
+if (spring_start >= 0) {
+  t_params_used <- c(t_params_used, par_names[2])
+  t_values_used <- c(t_values_used, init_lfmcmc_params[2])
+}
+if (summer_start >= 0) {
+  t_params_used <- c(t_params_used, par_names[3])
+  t_values_used <- c(t_values_used, init_lfmcmc_params[3])
+}
+if (fall_start >= 0) {
+  t_params_used <- c(t_params_used, par_names[4])
+  t_values_used <- c(t_values_used, init_lfmcmc_params[4])
+}
+if (winter_start >= 0) {
+  t_params_used <- c(t_params_used, par_names[5])
+  t_values_used <- c(t_values_used, init_lfmcmc_params[5])
+}
+res_t_rate <- res[res$param == t_params_used, ]
 
 # Generate initial values for vertical lines in each plot
 init_r_c_values <- c(init_lfmcmc_params[6],
@@ -310,8 +329,8 @@ init_r_c_names <- c(par_names[6],
 init_r_c_df <- data.frame(param = init_r_c_names,
   value = init_r_c_values)
 
-init_t_df <- data.frame(param = par_names[2:5],
-  value = init_lfmcmc_params[2:5])
+init_t_df <- data.frame(param = t_params_used,
+  value = t_values_used)
 
 # Plot the recovery and contact rates
 ggplot(res_r_c_rate, aes(x = value,
@@ -320,7 +339,7 @@ ggplot(res_r_c_rate, aes(x = value,
   geom_density(alpha = .3) +
   geom_vline(aes(xintercept = value, color = param),
     data = init_r_c_df) +
-  facet_wrap(~param, scales = "free") +
+  facet_wrap(~param, scales = "free", ncol = 1) +
   theme_light()
 
 # Plot the transmission rates
@@ -330,6 +349,7 @@ ggplot(res_t_rate, aes(x = value,
   geom_density(alpha = .3) +
   geom_vline(aes(xintercept = value, color = param),
     data = init_t_df) +
+  facet_wrap(~param, scales = "free", ncol = 1) +
   theme_light()
 ```
 
