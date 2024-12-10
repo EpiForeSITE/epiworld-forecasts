@@ -89,7 +89,7 @@ forecast_data_cases <- forecast_data$Daily.Cases
 model_seed <- 112
 model_ndays <- 90
 model_n <- 10000    # model population size
-n_samples <- 3000   # number of LFMCMC iterations
+n_samples <- 6000   # number of LFMCMC iterations
 n_burnin <- 2000    # burn-in period
 lfmcmc_epsilon <- 0.25
 
@@ -285,6 +285,12 @@ Here is the posterior distribution of the LFMCMC samples with vertical lines rep
 ```{r}
 #| label: get-posterior-dist
 res <- get_accepted_params(lfmcmc_model)
+res_csv <- res
+colnames(res_csv) <- param_names
+write.csv(res_csv, file = "lfmcmc_model_parameters.csv")
+stats_csv <- get_accepted_stats(lfmcmc_model)
+colnames(stats_csv) <- stats_names
+write.csv(stats_csv, file = "lfmcmc_model_statistics.csv")
 res <- lapply(seq_along(param_names), \(i) {
   data.frame(
     step  = seq_along(nrow(res)),
