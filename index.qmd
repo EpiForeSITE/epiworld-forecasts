@@ -287,10 +287,10 @@ Here is the posterior distribution of the LFMCMC samples with vertical lines rep
 res <- get_accepted_params(lfmcmc_model)
 res_csv <- res
 colnames(res_csv) <- param_names
-write.csv(res_csv, file = "lfmcmc_model_parameters.csv")
+write.csv(res_csv, file = "build/html/lfmcmc_model_parameters.csv")
 stats_csv <- get_accepted_stats(lfmcmc_model)
 colnames(stats_csv) <- stats_names
-write.csv(stats_csv, file = "lfmcmc_model_statistics.csv")
+write.csv(stats_csv, file = "build/html/lfmcmc_model_statistics.csv")
 res <- lapply(seq_along(param_names), \(i) {
   data.frame(
     step  = seq_along(nrow(res)),
