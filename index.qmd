@@ -230,8 +230,8 @@ lfmcmc_proposal_fun <- function(params_prev) {
 
 # Define the LFMCMC kernel function
 # - Weighs simulation results against observed data
-lfmcmc_kernel_fun <- function(stats_now, stats_obs, epsilon) {
-  diff <- ((stats_now - stats_obs)^2)^epsilon
+lfmcmc_kernel_fun <- function(simulated_stats, observed_stats, epsilon) {
+  diff <- ((simulated_stats - observed_stats)^2)^epsilon
   dnorm(sqrt(sum(diff)))
 }
 
@@ -260,7 +260,7 @@ The epiworldR results printout (below) shows the mean parameter/statistic value,
 ```{r}
 #| label: print-results
 # Print the results with 50% burnin
-par_names <- c(
+param_names <- c(
   "Recovery rate",
   "Transmission rate (spring)",
   "Transmission rate (summer)",
@@ -269,7 +269,7 @@ par_names <- c(
   "Contact rate (weekday)",
   "Contact rate (weekend)"
 )
-set_par_names(lfmcmc_model, par_names)
+set_params_names(lfmcmc_model, param_names)
 
 stats_names <- c(
   "Time to peak",
@@ -285,36 +285,36 @@ Here is the posterior distribution of the LFMCMC samples with vertical lines rep
 ```{r}
 #| label: get-posterior-dist
 res <- get_accepted_params(lfmcmc_model)
-res <- lapply(seq_along(par_names), \(i) {
+res <- lapply(seq_along(param_names), \(i) {
   data.frame(
     step  = seq_along(nrow(res)),
-    param = par_names[i],
+    param = param_names[i],
     value = res[, i]
   )
 }) |> do.call(what = "rbind")
 
 # Extract contact and recovery rates
-res_r_rate <- res[res$param == par_names[1], ]
-res_c_rate <- res[res$param == par_names[6:7], ]
+res_r_rate <- res[res$param == param_names[1], ]
+res_c_rate <- res[res$param == param_names[6:7], ]
 res_r_c_rate <- rbind(res_r_rate, res_c_rate)
 
 # Select transmission rates to plot
 t_params_used <- character()
 t_values_used <- numeric()
 if (spring_start >= 0) {
-  t_params_used <- c(t_params_used, par_names[2])
+  t_params_used <- c(t_params_used, param_names[2])
   t_values_used <- c(t_values_used, init_lfmcmc_params[2])
 }
 if (summer_start >= 0) {
-  t_params_used <- c(t_params_used, par_names[3])
+  t_params_used <- c(t_params_used, param_names[3])
   t_values_used <- c(t_values_used, init_lfmcmc_params[3])
 }
 if (fall_start >= 0) {
-  t_params_used <- c(t_params_used, par_names[4])
+  t_params_used <- c(t_params_used, param_names[4])
   t_values_used <- c(t_values_used, init_lfmcmc_params[4])
 }
 if (winter_start >= 0) {
-  t_params_used <- c(t_params_used, par_names[5])
+  t_params_used <- c(t_params_used, param_names[5])
   t_values_used <- c(t_values_used, init_lfmcmc_params[5])
 }
 res_t_rate <- res[res$param == t_params_used, ]
@@ -323,9 +323,9 @@ res_t_rate <- res[res$param == t_params_used, ]
 init_r_c_values <- c(init_lfmcmc_params[6],
   init_lfmcmc_params[7],
   init_lfmcmc_params[1])
-init_r_c_names <- c(par_names[6],
-  par_names[7],
-  par_names[1])
+init_r_c_names <- c(param_names[6],
+  param_names[7],
+  param_names[1])
 init_r_c_df <- data.frame(param = init_r_c_names,
   value = init_r_c_values)
 
