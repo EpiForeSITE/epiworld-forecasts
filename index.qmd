@@ -317,7 +317,7 @@ if (winter_start >= 0) {
 t_rates <- accepted_params[accepted_params$param == t_params_used, ]
 r_rate <- accepted_params[accepted_params$param == param_names[1], ]
 c_rates <- accepted_params[accepted_params$param == param_names[6:7], ]
-t_r_c_rates <- rbind(r_rate, c_rate, t_rates)
+t_r_c_rates <- rbind(r_rate, c_rates, t_rates)
 
 # Generate initial values for vertical lines in each plot
 init_values <- c(init_lfmcmc_params[6],
@@ -334,7 +334,7 @@ init_df <- data.frame(param = init_names,
   value = init_values)
 
 # Plot parameter distributions
-ggplot(res_rates, aes(x = value,
+ggplot(t_r_c_rates, aes(x = value,
   fill = param,
   y = after_stat(scaled))) +
   geom_density(alpha = .3) +
