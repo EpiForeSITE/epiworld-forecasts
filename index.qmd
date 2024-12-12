@@ -86,12 +86,13 @@ library(epiworldR)
 forecast_data_cases <- forecast_data$Daily.Cases
 
 # Set model parameters
-model_seed <- 112
-model_ndays <- 90
-model_n <- 10000    # model population size
-n_samples <- 3000   # number of LFMCMC iterations
-n_burnin <- 2000    # burn-in period
-lfmcmc_epsilon <- 0.25
+model_seed     <- 112
+model_ndays    <- 90
+model_n        <- 5000    # model population size
+n_samples      <- 2000   # number of LFMCMC iterations
+n_burnin       <- 1000    # burn-in period
+lfmcmc_epsilon <- .25
+n_splines      <- 10
 
 init_prevalence <- forecast_data_cases[1] / model_n
 init_contact_rate <- 10
@@ -198,7 +199,8 @@ lfmcmc_summary_fun <- function(case_counts) {
     time_to_peak,
     size_of_peak,
     mean_cases,
-    sd_cases
+    sd_cases,
+    spline(case_counts, n = n_splines)$y
   )
 }
 
@@ -247,11 +249,11 @@ lfmcmc_model <- LFMCMC(ef_model) |>
 ```{r}
 #| label: run-lfmcmc
 run_lfmcmc(
-  lfmcmc = lfmcmc_model,
+  lfmcmc       = lfmcmc_model,
   params_init_ = init_lfmcmc_params,
-  n_samples_ = n_samples,
-  epsilon_ = lfmcmc_epsilon,
-  seed = model_seed
+  n_samples_   = n_samples,
+  epsilon_     = lfmcmc_epsilon,
+  seed         = model_seed
 )
 ```
 
@@ -275,23 +277,30 @@ stats_names <- c(
   "Time to peak",
   "Size of peak",
   "Mean (cases)",
-  "Standard deviation (cases)"
+  "Standard deviation (cases)",
+  paste("Spline", 1:n_splines)
 )
 set_stats_names(lfmcmc_model, stats_names)
 
 print(lfmcmc_model, burnin = n_burnin)
 ```
+
 Here is the posterior distribution of the LFMCMC samples with vertical lines representing the initial parameter values.
+
 ```{r}
 #| label: get-posterior-dist
 res <- get_accepted_params(lfmcmc_model)
 res <- lapply(seq_along(param_names), \(i) {
   data.frame(
-    step  = seq_along(nrow(res)),
+    step  = seq_len(nrow(res)),
     param = param_names[i],
     value = res[, i]
   )
 }) |> do.call(what = "rbind")
+
+ggplot(res, aes(x = step, y = value)) +
+  geom_line(aes(group = param)) +
+  facet_wrap(~param, scales = "free_y")
 
 # Extract contact and recovery rates
 res_r_rate <- res[res$param == param_names[1], ]
@@ -417,6 +426,7 @@ sample_df <- data.frame(
 
 forecast_df <- rbind(observed_df, sample_df)
 ```
+
 ```{r}
 #| label: plot-forecast
 # Use color-blind-friendly palette:
