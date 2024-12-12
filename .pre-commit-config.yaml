@@ -21,6 +21,9 @@ repos:
             '--strict=FALSE',
             '--cache-root=styler-perm'
             ]
-      - id: lintr
-        args: [--warn_only]
-        verbose: true
+
+ci:
+  autofix_prs: true
+  autofix_commit_msg: '[pre-commit.ci] Fixing issues with pre-commit'
+  autoupdate_schedule: weekly
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit automatically updated revs.'

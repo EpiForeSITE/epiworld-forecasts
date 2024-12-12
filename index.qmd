@@ -368,7 +368,6 @@ forecast_prevalence <- forecast_data_cases[90] / model_n
 accepted_params <- get_accepted_params(lfmcmc_model)
 burnin_sample <- tail(accepted_params, n = (n_samples - n_burnin))
 params_sample <- burnin_sample[sample(nrow(burnin_sample), forecast_sample_n), ]
-# params_sample <- accepted_params[sample(nrow(accepted_params), forecast_sample_n), ]
 
 # Create the new model
 ef_model <- ModelSIRCONN(
