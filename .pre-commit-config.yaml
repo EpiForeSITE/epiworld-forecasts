@@ -21,9 +21,6 @@ repos:
             '--strict=FALSE',
             '--cache-root=styler-perm'
             ]
-      - id: lintr
-        args: [--warn_only]
-        verbose: true
 
 ci:
   autofix_prs: true
