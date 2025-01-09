@@ -207,11 +207,11 @@ lfmcmc_proposal_fun <- function(params_prev) {
   # Propose new model parameters
   params_1_to_5 <- plogis(
     qlogis(params_prev[1:5]) +
-      rnorm(length(params_prev[1:5]), mean = 0, sd = 0.1)
+      rnorm(length(params_prev[1:5]), mean = 0, sd = 0.05)
   )
 
   params_6_to_7 <- params_prev[6:7] +
-    rnorm(2, mean = 0, sd = 0.1)
+    rnorm(2, mean = 0, sd = 0.05)
 
 
   # Reflect contact rates
@@ -285,12 +285,16 @@ Here is the posterior distribution of the LFMCMC samples with vertical lines rep
 ```{r}
 #| label: get-posterior-dist
 res <- get_accepted_params(lfmcmc_model)
+
+# Save to CSV
 res_csv <- res
 colnames(res_csv) <- param_names
 write.csv(res_csv, file = "build/html/lfmcmc_model_parameters.csv")
 stats_csv <- get_accepted_stats(lfmcmc_model)
 colnames(stats_csv) <- stats_names
 write.csv(stats_csv, file = "build/html/lfmcmc_model_statistics.csv")
+
+# Process data into useful format
 res <- lapply(seq_along(param_names), \(i) {
   data.frame(
     step  = seq_along(nrow(res)),
