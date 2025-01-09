@@ -1,5 +1,5 @@
 ---
-title: "14-Day COVID-19 Forecast for Utah"
+title: "Methodology"
 date: last-modified
 execute:
   echo: false
@@ -7,9 +7,9 @@ execute:
 
 ## Introduction
 
-Using case data published by the Utah DHHS and the [epiworldR](https://github.com/UofUEpiBio/epiworldR) package, we calibrate and run an SIR connected model to generate a COVID-19 forecast for Utah, which is published weekly.
+Using case data published by the Utah DHHS and the [epiworldR](https://github.com/UofUEpiBio/epiworldR) package, we calibrate and run an SIR connected model to generate a 14-day COVID-19 forecast for Utah, which is published weekly.
 
-## Forecast
+## COVID-19 Cases in Utah (last 90 days)
 Every week, Utah DHHS publishes COVID-19 surveillance data on their [Coronavirus Dashboard](https://coronavirus.utah.gov/case-counts/) which includes reported case counts for each day starting March 18, 2020.
 Our forecast is calibrated on case counts from the last 90 days.
 
@@ -26,6 +26,18 @@ forecast_data$Date <- as.Date(forecast_data$Date)
 # Get data from last 90 days
 last_date <- max(forecast_data$Date)
 forecast_data <- forecast_data[forecast_data$Date > (last_date - 90), ]
+```
+
+```{r}
+#| label: plot-data
+#| fig-width: 7
+#| fig-height: 3
+#| fig-align: center
+library(ggplot2)
+ggplot(forecast_data, aes(x = Date, y = Daily.Cases)) +
+  geom_line() +
+  labs(x = "Date", y = "Daily Cases") +
+  theme_classic()
 
 # Identify the start date of each season (spring, summer, fall, winter) in data
 get_date_season <- function(date) {
@@ -48,6 +60,23 @@ summer_start <- match("summer", forecast_seasons, nomatch = -1)
 fall_start <- match("fall", forecast_seasons, nomatch = -1)
 winter_start <- match("winter", forecast_seasons, nomatch = -1)
 ```
+
+## Calibrating the Forecasting Model
+We use epiworldR's implementation of Likelihood-Free Markhov Chain Monte Carlo (LFMCMC) to calibrate the SIR connected model (using ModelSIRCONN from epiworldR) by estimating the following model parameters:
+
+* Recovery rate
+* Transmission rates for each season (spring, summer, fall, winter)
+* Contact rates for weekdays and weekends
+
+The LFMCMC simulation runs for 6,000 iterations.
+In each iteration, it does the following:
+
+* Proposes a new set of parameter values
+* Runs the model with 10,000 agents and the proposed parameters
+* Compares the output to the UDHHS data and records the result
+
+We note that while the population of Utah over 3 million, we only need to run our model with 10,000 agents.
+This is because we don't expect more than 10,000 COVID-19 cases and the model automatically scales the contact rate to account for the difference between the model population and Utah's population.
 
 ```{r}
 #| label: prep-model
@@ -224,7 +253,13 @@ run_lfmcmc(
   epsilon_ = lfmcmc_epsilon,
   seed = model_seed
 )
+```
 
+When the simulation is finished, we use a burn-in period of n = 2000 (66% of simulation iterations).
+The epiworldR results printout (below) shows the mean parameter/statistic value, the 95% credible interval (in [ ]), and the initial/observed value (in ()).
+```{r}
+#| label: print-results
+# Print the results with 50% burnin
 param_names <- c(
   "Recovery rate",
   "Transmission rate (spring)",
@@ -243,6 +278,71 @@ stats_names <- c(
   "Standard deviation (cases)"
 )
 set_stats_names(lfmcmc_model, stats_names)
+
+print(lfmcmc_model, burnin = n_burnin)
+```
+Here is the posterior distribution of the LFMCMC samples with vertical lines representing the initial parameter values.
+```{r}
+#| label: get-posterior-dist
+
+accepted_params <- get_accepted_params(lfmcmc_model)
+accepted_params <- lapply(seq_along(param_names), \(i) {
+  data.frame(
+    step  = seq_along(nrow(accepted_params)),
+    param = param_names[i],
+    value = accepted_params[, i]
+  )
+}) |> do.call(what = "rbind")
+
+# Select transmission rates to plot
+t_params_used <- character()
+t_values_used <- numeric()
+if (spring_start >= 0) {
+  t_params_used <- c(t_params_used, param_names[2])
+  t_values_used <- c(t_values_used, init_lfmcmc_params[2])
+}
+if (summer_start >= 0) {
+  t_params_used <- c(t_params_used, param_names[3])
+  t_values_used <- c(t_values_used, init_lfmcmc_params[3])
+}
+if (fall_start >= 0) {
+  t_params_used <- c(t_params_used, param_names[4])
+  t_values_used <- c(t_values_used, init_lfmcmc_params[4])
+}
+if (winter_start >= 0) {
+  t_params_used <- c(t_params_used, param_names[5])
+  t_values_used <- c(t_values_used, init_lfmcmc_params[5])
+}
+
+# Extract transmission, recovery, and contact rates
+t_rates <- accepted_params[accepted_params$param == t_params_used, ]
+r_rate <- accepted_params[accepted_params$param == param_names[1], ]
+c_rates <- accepted_params[accepted_params$param == param_names[6:7], ]
+t_r_c_rates <- rbind(r_rate, c_rates, t_rates)
+
+# Generate initial values for vertical lines in each plot
+init_values <- c(init_lfmcmc_params[6],
+  init_lfmcmc_params[7],
+  init_lfmcmc_params[1],
+  t_values_used)
+
+init_names <- c(param_names[6],
+  param_names[7],
+  param_names[1],
+  t_params_used)
+
+init_df <- data.frame(param = init_names,
+  value = init_values)
+
+# Plot parameter distributions
+ggplot(t_r_c_rates, aes(x = value,
+  fill = param,
+  y = after_stat(scaled))) +
+  geom_density(alpha = .3) +
+  geom_vline(aes(xintercept = value, color = param),
+    data = init_df) +
+  facet_wrap(~param, scales = "free", ncol = 1) +
+  theme_light()
 ```
 
 ## Epiworld Forecast
@@ -310,9 +410,6 @@ forecast_df <- rbind(observed_df, sample_df)
 ```
 ```{r}
 #| label: plot-forecast
-
-library(ggplot2)
-
 # Use color-blind-friendly palette:
 cbb_light_blue <- "#56B4E9"
 cbb_palette <- c(cbb_light_blue, "black")
@@ -337,6 +434,3 @@ ggplot(forecast_df,
   scale_y_continuous(n.breaks = 20) +
   theme_bw()
 ```
-
-## Acknowledgements
-This forecast was developed jointly by Andrew Pulsipher and George Vega Yon as part of the EpiForeSITE project.
