@@ -86,13 +86,13 @@ library(epiworldR)
 forecast_data_cases <- forecast_data$Daily.Cases
 
 # Set model parameters
-model_seed     <- 112
-model_ndays    <- 90
-model_n        <- 5000    # model population size
-n_samples      <- 2000   # number of LFMCMC iterations
-n_burnin       <- 1000    # burn-in period
-lfmcmc_epsilon <- .25
-n_splines      <- 10
+model_seed      <- 112
+model_ndays     <- 90
+model_n         <- 10000  # model population size
+n_samples       <- 6000   # number of LFMCMC iterations
+n_burnin        <- 2000   # burn-in period
+lfmcmc_epsilon  <- 0.25
+n_splines       <- 10     # Number of splines for LFMCMC
 
 init_prevalence <- forecast_data_cases[1] / model_n
 init_contact_rate <- 10
@@ -209,11 +209,11 @@ lfmcmc_proposal_fun <- function(params_prev) {
   # Propose new model parameters
   params_1_to_5 <- plogis(
     qlogis(params_prev[1:5]) +
-      rnorm(length(params_prev[1:5]), mean = 0, sd = 0.1)
+      rnorm(length(params_prev[1:5]), mean = 0, sd = 0.025)
   )
 
   params_6_to_7 <- params_prev[6:7] +
-    rnorm(2, mean = 0, sd = 0.1)
+    rnorm(2, mean = 0, sd = 0.025)
 
 
   # Reflect contact rates
@@ -289,23 +289,19 @@ Here is the posterior distribution of the LFMCMC samples with vertical lines rep
 
 ```{r}
 #| label: get-posterior-dist
-res <- get_accepted_params(lfmcmc_model)
-res <- lapply(seq_along(param_names), \(i) {
+
+accepted_params <- get_accepted_params(lfmcmc_model)
+accepted_params <- lapply(seq_along(param_names), \(i) {
   data.frame(
-    step  = seq_len(nrow(res)),
+    step  = seq_len(nrow(accepted_params)),
     param = param_names[i],
-    value = res[, i]
+    value = accepted_params[, i]
   )
 }) |> do.call(what = "rbind")
 
-ggplot(res, aes(x = step, y = value)) +
+ggplot(accepted_params, aes(x = step, y = value)) +
   geom_line(aes(group = param)) +
   facet_wrap(~param, scales = "free_y")
-
-# Extract contact and recovery rates
-res_r_rate <- res[res$param == param_names[1], ]
-res_c_rate <- res[res$param == param_names[6:7], ]
-res_r_c_rate <- rbind(res_r_rate, res_c_rate)
 
 # Select transmission rates to plot
 t_params_used <- character()
@@ -326,38 +322,34 @@ if (winter_start >= 0) {
   t_params_used <- c(t_params_used, param_names[5])
   t_values_used <- c(t_values_used, init_lfmcmc_params[5])
 }
-res_t_rate <- res[res$param == t_params_used, ]
+
+# Extract transmission, recovery, and contact rates
+t_rates <- accepted_params[accepted_params$param == t_params_used, ]
+r_rate <- accepted_params[accepted_params$param == param_names[1], ]
+c_rates <- accepted_params[accepted_params$param == param_names[6:7], ]
+t_r_c_rates <- rbind(r_rate, c_rates, t_rates)
 
 # Generate initial values for vertical lines in each plot
-init_r_c_values <- c(init_lfmcmc_params[6],
+init_values <- c(init_lfmcmc_params[6],
   init_lfmcmc_params[7],
-  init_lfmcmc_params[1])
-init_r_c_names <- c(param_names[6],
+  init_lfmcmc_params[1],
+  t_values_used)
+
+init_names <- c(param_names[6],
   param_names[7],
-  param_names[1])
-init_r_c_df <- data.frame(param = init_r_c_names,
-  value = init_r_c_values)
+  param_names[1],
+  t_params_used)
 
-init_t_df <- data.frame(param = t_params_used,
-  value = t_values_used)
+init_df <- data.frame(param = init_names,
+  value = init_values)
 
-# Plot the recovery and contact rates
-ggplot(res_r_c_rate, aes(x = value,
+# Plot parameter distributions
+ggplot(t_r_c_rates, aes(x = value,
   fill = param,
   y = after_stat(scaled))) +
   geom_density(alpha = .3) +
   geom_vline(aes(xintercept = value, color = param),
-    data = init_r_c_df) +
-  facet_wrap(~param, scales = "free", ncol = 1) +
-  theme_light()
-
-# Plot the transmission rates
-ggplot(res_t_rate, aes(x = value,
-  fill = param,
-  y = after_stat(scaled))) +
-  geom_density(alpha = .3) +
-  geom_vline(aes(xintercept = value, color = param),
-    data = init_t_df) +
+    data = init_df) +
   facet_wrap(~param, scales = "free", ncol = 1) +
   theme_light()
 ```
@@ -386,7 +378,6 @@ forecast_prevalence <- forecast_data_cases[90] / model_n
 accepted_params <- get_accepted_params(lfmcmc_model)
 burnin_sample <- tail(accepted_params, n = (n_samples - n_burnin))
 params_sample <- burnin_sample[sample(nrow(burnin_sample), forecast_sample_n), ]
-# params_sample <- accepted_params[sample(nrow(accepted_params), forecast_sample_n), ]
 
 # Create the new model
 ef_model <- ModelSIRCONN(
