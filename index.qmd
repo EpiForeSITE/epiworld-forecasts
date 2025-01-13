@@ -178,11 +178,11 @@ lfmcmc_proposal_fun <- function(params_prev) {
   # Propose new model parameters
   params_1_to_5 <- plogis(
     qlogis(params_prev[1:5]) +
-      rnorm(length(params_prev[1:5]), mean = 0, sd = 0.05)
+      rnorm(length(params_prev[1:5]), mean = 0, sd = 0.025)
   )
 
   params_6_to_7 <- params_prev[6:7] +
-    rnorm(2, mean = 0, sd = 0.05)
+    rnorm(2, mean = 0, sd = 0.025)
 
 
   # Reflect contact rates
