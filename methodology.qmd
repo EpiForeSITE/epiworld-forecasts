@@ -257,6 +257,7 @@ run_lfmcmc(
 
 When the simulation is finished, we use a burn-in period of n = 2000 (66% of simulation iterations).
 The epiworldR results printout (below) shows the mean parameter/statistic value, the 95% credible interval (in [ ]), and the initial/observed value (in ()).
+
 ```{r}
 #| label: print-results
 # Print the results with 50% burnin
@@ -281,7 +282,9 @@ set_stats_names(lfmcmc_model, stats_names)
 
 print(lfmcmc_model, burnin = n_burnin)
 ```
+
 Here is the posterior distribution of the LFMCMC samples with vertical lines representing the initial parameter values.
+
 ```{r}
 #| label: get-posterior-dist
 
