@@ -89,7 +89,7 @@ forecast_data_cases <- forecast_data$Daily.Cases
 model_seed <- 112
 model_ndays <- 90
 model_n <- 10000    # model population size
-n_samples <- 3000   # number of LFMCMC iterations
+n_samples <- 6000   # number of LFMCMC iterations
 n_burnin <- 2000    # burn-in period
 lfmcmc_epsilon <- 0.25
 
@@ -207,11 +207,11 @@ lfmcmc_proposal_fun <- function(params_prev) {
   # Propose new model parameters
   params_1_to_5 <- plogis(
     qlogis(params_prev[1:5]) +
-      rnorm(length(params_prev[1:5]), mean = 0, sd = 0.1)
+      rnorm(length(params_prev[1:5]), mean = 0, sd = 0.025)
   )
 
   params_6_to_7 <- params_prev[6:7] +
-    rnorm(2, mean = 0, sd = 0.1)
+    rnorm(2, mean = 0, sd = 0.025)
 
 
   # Reflect contact rates
@@ -284,6 +284,7 @@ print(lfmcmc_model, burnin = n_burnin)
 Here is the posterior distribution of the LFMCMC samples with vertical lines representing the initial parameter values.
 ```{r}
 #| label: get-posterior-dist
+
 accepted_params <- get_accepted_params(lfmcmc_model)
 accepted_params <- lapply(seq_along(param_names), \(i) {
   data.frame(
