@@ -49,3 +49,20 @@ get_date_season <- function(date) {
     return("winter")
   }
 }
+
+# Function to get start date for each season from an array of dates
+# - This assumes the dates are chronologically organized
+get_season_starts <- function(dates) {
+  seasons <- mapply(get_date_season, dates)
+  season_names <- c("spring", "summer", "fall", "winter")
+
+  spring_start <- match(season_names[1], forecast_seasons, nomatch = -1)
+  summer_start <- match(season_names[2], forecast_seasons, nomatch = -1)
+  fall_start <- match(season_names[3], forecast_seasons, nomatch = -1)
+  winter_start <- match(season_names[4], forecast_seasons, nomatch = -1)
+
+  season_starts <- c(spring_start, summer_start, fall_start, winter_start)
+  names(season_starts) <- season_names
+
+  return(season_starts)
+}
