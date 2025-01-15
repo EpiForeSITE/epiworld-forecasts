@@ -5,7 +5,7 @@ source("forecast-pkg.R")
 source("plot-forecast.R")
 
 ## ----------------------------------
-## FORECAST FUNCTIONS
+## HELPER FUNCTIONS
 ## ----------------------------------
 
 get_covid_data <- function(n_days) {
@@ -25,29 +25,86 @@ get_covid_data <- function(n_days) {
   return(forecast_data) # TODO: remove return statements
 }
 
+## ----------------------------------
+## LFMCMC FUNCTIONS
+## ----------------------------------
+
+# Define the LFMCMC summary function
+lfmcmc_summary_fun <- function(case_counts) {
+  # Extract summary statistics from the data
+  time_to_peak <- which.max(case_counts)
+  size_of_peak <- case_counts[time_to_peak]
+  mean_cases <- mean(case_counts)
+  sd_cases <- sd(case_counts)
+
+  c(
+    time_to_peak,
+    size_of_peak,
+    mean_cases,
+    sd_cases
+  )
+}
+
+# Define the LFMCMC summary function
+lfmcmc_proposal_fun <- function(params_prev) {
+  # Propose new model parameters
+  params_1_to_5 <- plogis(
+    qlogis(params_prev[1:5]) +
+      rnorm(length(params_prev[1:5]), mean = 0, sd = 0.025)
+  )
+
+  params_6_to_7 <- params_prev[6:7] +
+    rnorm(2, mean = 0, sd = 0.025)
+
+
+  # Reflect contact rates
+  if (params_6_to_7[1] < 0) {
+    params_6_to_7[1] <- params_prev[6] -
+      (params_6_to_7[1] - params_prev[6])
+  }
+  if (params_6_to_7[2] < 0) {
+    params_6_to_7[2] <- params_prev[7] -
+      (params_6_to_7[2] - params_prev[7])
+  }
+
+  # Return proposed parameters
+  c(params_1_to_5, params_6_to_7)
+}
+
+# Define the LFMCMC kernel function
+# - Weighs simulation results against observed data
+lfmcmc_kernel_fun <- function(simulated_stats, observed_stats, epsilon) {
+  diff <- ((simulated_stats - observed_stats)^2)^epsilon
+  dnorm(sqrt(sum(diff)))
+}
+
+print_lfmcmc_results <- function(lfmcmc_object, burnin) {
+
+  param_names <- c(
+    "Recovery rate",
+    "Transmission rate (spring)",
+    "Transmission rate (summer)",
+    "Transmission rate (fall)",
+    "Transmission rate (winter)",
+    "Contact rate (weekday)",
+    "Contact rate (weekend)"
+  )
+  set_params_names(lfmcmc_object, param_names)
+
+  stats_names <- c(
+    "Time to peak",
+    "Size of peak",
+    "Mean (cases)",
+    "Standard deviation (cases)"
+  )
+  set_stats_names(lfmcmc_object, stats_names)
+
+  print(lfmcmc_object, burnin = burnin)
+}
+
 # ## ----------------------------------
 # ## RUN FORECAST
 # ## ----------------------------------
-
-# # The forecast runs on only the last 90 days of data
-# n_days <- 90
-
-# # Get the data
-# forecast_data <- get_forecast_data(n_days)
-# # Identify the start date of each season (spring, summer, fall, winter) in data
-# forecast_seasons <- mapply(get_date_season, forecast_data$Date)
-# spring_start <- match("spring", forecast_seasons, nomatch = -1)
-# summer_start <- match("summer", forecast_seasons, nomatch = -1)
-# fall_start <- match("fall", forecast_seasons, nomatch = -1)
-# winter_start <- match("winter", forecast_seasons, nomatch = -1)
-
-# # Extract cases from observed data
-# forecast_data_cases <- forecast_data$Daily.Cases
-
-# # Set model parameters
-# model_seed          <- 112      # Random seed
-# model_ndays         <- n_days   # How many days to run the model
-# model_n             <- 10000    # model population size
 
 # init_prevalence <- forecast_data_cases[1] / model_n
 # init_contact_rate <- 10

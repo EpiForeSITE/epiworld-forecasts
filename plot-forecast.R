@@ -6,7 +6,6 @@ library(ggplot2)
 #| fig-width: 7
 #| fig-height: 3
 #| fig-align: center
-# TODO: rename forecast data to observed data/existing data/etc
 plot_covid_data <- function(data) {
   ggplot(data, aes(x = Date, y = Daily.Cases)) +
     geom_line() +
@@ -15,13 +14,12 @@ plot_covid_data <- function(data) {
 }
 
 # Plot posterior distribution of model parameters
-# TODO: pass in season start values
-plot_post_dist_model_params <- function(lfmcmc_model, param_names, init_lfmcmc_params) {
+plot_lfmcmc_post_dist <- function(lfmcmc_object, param_names, init_lfmcmc_params, seasons) {
 
-  accepted_params <- get_accepted_params(lfmcmc_model)
+  accepted_params <- get_accepted_params(lfmcmc_object)
   accepted_params <- lapply(seq_along(param_names), \(i) {
     data.frame(
-      step  = seq_along(nrow(accepted_params)),
+      step  = seq_len(nrow(accepted_params)),
       param = param_names[i],
       value = accepted_params[, i]
     )
@@ -30,19 +28,19 @@ plot_post_dist_model_params <- function(lfmcmc_model, param_names, init_lfmcmc_p
   # Select transmission rates to plot
   t_params_used <- character()
   t_values_used <- numeric()
-  if (spring_start >= 0) {
+  if (seasons[["spring"]] >= 0) {
     t_params_used <- c(t_params_used, param_names[2])
     t_values_used <- c(t_values_used, init_lfmcmc_params[2])
   }
-  if (summer_start >= 0) {
+  if (seasons[["summer"]] >= 0) {
     t_params_used <- c(t_params_used, param_names[3])
     t_values_used <- c(t_values_used, init_lfmcmc_params[3])
   }
-  if (fall_start >= 0) {
+  if (seasons[["fall"]] >= 0) {
     t_params_used <- c(t_params_used, param_names[4])
     t_values_used <- c(t_values_used, init_lfmcmc_params[4])
   }
-  if (winter_start >= 0) {
+  if (seasons[["winter"]] >= 0) {
     t_params_used <- c(t_params_used, param_names[5])
     t_values_used <- c(t_values_used, init_lfmcmc_params[5])
   }
