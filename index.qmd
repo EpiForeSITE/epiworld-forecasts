@@ -38,6 +38,7 @@ seasons <- get_season_starts(covid_data$Date)
 # Get observed case counts
 covid_cases <- covid_data$Daily.Cases
 
+plot_covid_data(covid_data)
 
 ## ----------------------------------
 ## Create SIR CONN Model
@@ -232,22 +233,11 @@ The forecast mean is shown below along with the 50% and 95% confidence intervals
 
 ```{r}
 #| label: run-forecast
-library(tidyr)
 
-forecast_sample_n <- 200
-
-# Run model for 2 weeks
-model_ndays <- 14
-
-# Compute prevalance based on most recent day
+# Create a new SIR CONN model
+# - Compute prevalance based on most recent day
 forecast_prevalence <- covid_cases[90] / model_n
-
-# Select parameters from second quantile of accepted params
-accepted_params <- get_accepted_params(calibration_lfmcmc)
-burnin_sample <- tail(accepted_params, n = (lfmcmc_n_samples - lfmcmc_burnin))
-params_sample <- burnin_sample[sample(nrow(burnin_sample), forecast_sample_n), ]
-
-# Create the new model
+# - Init the model
 covid_sirconn_model <- ModelSIRCONN(
   name              = "COVID-19",
   n                 = model_n,
@@ -258,58 +248,18 @@ covid_sirconn_model <- ModelSIRCONN(
 )
 
 # Run the simulation for each set of params in the sample
+# - Select sample of accepted params from LFMCMC
+forecast_sample_n <- 200 # Sample size
+params_sample <- get_params_sample(calibration_lfmcmc,
+  lfmcmc_n_samples,
+  lfmcmc_burnin,
+  forecast_sample_n)
+# - Set forecast length
+model_ndays <- 14
+# - Run simulation function for each set of params from the sample
 forecast_dist <- apply(params_sample, 1, lfmcmc_simulation_fun)
 
-# Find 2.5%, 25%, 50%, 75%, and 97.5% quantiles
-forecast_quantiles <- apply(forecast_dist, 1, quantile, probs = c(0.025, 0.25, 0.5, 0.75, 0.975))
-
-# Combine observed data with sample median for plotting forecast
-observed_df <- data.frame(
-  date = covid_data$Date[60:90],
-  counts = covid_data$Daily.Cases[60:90],
-  observed = TRUE,
-  lb_95 = NA,
-  ub_95 = NA,
-  lb_50 = NA,
-  ub_50 = NA
-)
-sample_df <- data.frame(
-  date = covid_data$Date[90] + 0:13,
-  counts = forecast_quantiles["50%", ],
-  observed = FALSE,
-  lb_95 = forecast_quantiles["2.5%", ],
-  ub_95 = forecast_quantiles["97.5%", ],
-  lb_50 = forecast_quantiles["25%", ],
-  ub_50 = forecast_quantiles["75%", ]
-)
-
-forecast_df <- rbind(observed_df, sample_df)
-```
-```{r}
-#| label: plot-forecast
-# Use color-blind-friendly palette:
-cbb_light_blue <- "#56B4E9"
-cbb_palette <- c(cbb_light_blue, "black")
-
-ggplot(forecast_df,
-  aes(x = date)) +
-  geom_ribbon(aes(ymin = lb_95, ymax = ub_95),
-    fill = cbb_light_blue,
-    alpha = 0.4,
-    na.rm = TRUE) +
-  geom_ribbon(aes(ymin = lb_50, ymax = ub_50),
-    fill = cbb_light_blue,
-    alpha = 0.4,
-    na.rm = TRUE) +
-  geom_point(aes(y = counts,
-    color = observed)) +
-  geom_line(aes(y = counts,
-    color = observed)) +
-  labs(x = "Date", y = "Daily Cases") +
-  scale_colour_manual(values = cbb_palette,
-    labels = c("Forecasted Cases", "Observed Cases")) +
-  scale_y_continuous(n.breaks = 20) +
-  theme_bw()
+plot_forecast(forecast_dist, covid_data)
 ```
 
 ## Acknowledgements

@@ -76,3 +76,55 @@ plot_lfmcmc_post_dist <- function(lfmcmc_object, param_names, init_lfmcmc_params
     theme_light()
 
 }
+
+# Plot forecast
+plot_forecast <- function(forecast_dist, covid_data) {
+  # Find 2.5%, 25%, 50%, 75%, and 97.5% quantiles
+  forecast_quantiles <- apply(forecast_dist, 1, quantile, probs = c(0.025, 0.25, 0.5, 0.75, 0.975))
+
+  # Combine observed data with sample median for plotting forecast
+  observed_df <- data.frame(
+    date = covid_data$Date[60:90],
+    counts = covid_data$Daily.Cases[60:90],
+    observed = TRUE,
+    lb_95 = NA,
+    ub_95 = NA,
+    lb_50 = NA,
+    ub_50 = NA
+  )
+  sample_df <- data.frame(
+    date = covid_data$Date[90] + 0:13,
+    counts = forecast_quantiles["50%", ],
+    observed = FALSE,
+    lb_95 = forecast_quantiles["2.5%", ],
+    ub_95 = forecast_quantiles["97.5%", ],
+    lb_50 = forecast_quantiles["25%", ],
+    ub_50 = forecast_quantiles["75%", ]
+  )
+
+  forecast_df <- rbind(observed_df, sample_df)
+
+  # Use color-blind-friendly palette:
+  cbb_light_blue <- "#56B4E9"
+  cbb_palette <- c(cbb_light_blue, "black")
+
+  ggplot(forecast_df,
+    aes(x = date)) +
+    geom_ribbon(aes(ymin = lb_95, ymax = ub_95),
+      fill = cbb_light_blue,
+      alpha = 0.4,
+      na.rm = TRUE) +
+    geom_ribbon(aes(ymin = lb_50, ymax = ub_50),
+      fill = cbb_light_blue,
+      alpha = 0.4,
+      na.rm = TRUE) +
+    geom_point(aes(y = counts,
+      color = observed)) +
+    geom_line(aes(y = counts,
+      color = observed)) +
+    labs(x = "Date", y = "Daily Cases") +
+    scale_colour_manual(values = cbb_palette,
+      labels = c("Forecasted Cases", "Observed Cases")) +
+    scale_y_continuous(n.breaks = 20) +
+    theme_bw()
+}
