@@ -21,6 +21,9 @@ source("covid-forecast.R")
 
 ```{r}
 #| label: plot-observed-data
+#| fig-width: 7
+#| fig-height: 3
+#| fig-align: center
 plot_covid_data(covid_data)
 ```
 
@@ -31,7 +34,7 @@ We use epiworldR's implementation of Likelihood-Free Markhov Chain Monte Carlo (
 * Transmission rates for each season (spring, summer, fall, winter)
 * Contact rates for weekdays and weekends
 
-The LFMCMC simulation runs for 3,000 iterations.
+The LFMCMC simulation runs for 6,000 iterations.
 In each iteration, it does the following:
 
 * Proposes a new set of parameter values
@@ -41,7 +44,7 @@ In each iteration, it does the following:
 We note that while the population of Utah over 3 million, we only need to run our model with 10,000 agents.
 This is because we don't expect more than 10,000 COVID-19 cases and the model automatically scales the contact rate to account for the difference between the model population and Utah's population.
 
-When the simulation is finished, we use a burn-in period of n = 2000 (66% of simulation iterations).
+When the simulation is finished, we use a burn-in period of n = 2,000 (33% of simulation iterations).
 The epiworldR results printout (below) shows the mean parameter/statistic value, the 95% credible interval (in [ ]), and the initial/observed value (in ()).
 ```{r}
 #| label: print-lfmcmc-results
