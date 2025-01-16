@@ -12,7 +12,9 @@ source("covid-forecast.R")
 
 ## Introduction
 
-Using case data published by the Utah DHHS and the [epiworldR](https://github.com/UofUEpiBio/epiworldR) package, we calibrate and run an SIR connected model to generate a 14-day COVID-19 forecast for Utah, which is published weekly.
+Here we provide details on our methodology for calibrating and running our forecast.
+We use case count data published weekly by the Utah DHHS.
+The calibration and SIR connected model are run using the [epiworldR](https://github.com/UofUEpiBio/epiworldR) package.
 
 ## COVID-19 Cases in Utah (last 90 days)
 Every week, Utah DHHS publishes COVID-19 surveillance data on their [Coronavirus Dashboard](https://coronavirus.utah.gov/case-counts/) which includes reported case counts for each day starting March 18, 2020.
@@ -58,13 +60,14 @@ Here is the posterior distribution of the LFMCMC samples with vertical lines rep
 plot_lfmcmc_post_dist(calibration_lfmcmc, init_lfmcmc_params, param_names, seasons)
 ```
 
-## Epiworld Forecast
+## COVID-19 Forecast
 
 We can now run the forecast.
 Our model prevalence is set according to the reported case counts of the most recent day of the UDHHS data.
 We then take a sample of n = 200 from the LFMCMC accepted parameters (after the burn-in period) and run the SIR connected model with the new prevalence for each set of parameters.
 Each simulation is for two weeks, giving us a 14-day forecast of COVID-19 in Utah.
 The forecast mean is shown below along with the 50% and 95% confidence intervals.
+The actual case counts are plotted in black, while the forecast is plotted in blue.
 
 ```{r}
 #| label: plot-forecast
