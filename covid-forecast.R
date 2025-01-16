@@ -57,9 +57,10 @@ get_covid_data <- function(n_days) {
 #' `size_of_peak`, as well as the mean and standard deviation.
 #'
 #' @param case_counts Vector of integer case counts.
+#' @param lfmcmc_obj Object of class [LFMCMC].
 #'
 #' @returns A vector of summary statistics.
-lfmcmc_summary_fun <- function(case_counts) {
+lfmcmc_summary_fun <- function(case_counts, lfmcmc_obj) {
 
   time_to_peak <- which.max(case_counts)
   size_of_peak <- case_counts[time_to_peak]
@@ -87,9 +88,10 @@ lfmcmc_summary_fun <- function(case_counts) {
 #' to compute new ("proposed") values.
 #'
 #' @param params_prev Vector of numeric parameter values.
+#' @param lfmcmc_obj Object of class [LFMCMC].
 #'
 #' @returns A vector of proposed parameter values.
-lfmcmc_proposal_fun <- function(params_prev) {
+lfmcmc_proposal_fun <- function(params_prev, lfmcmc_obj) {
   # Propose new model parameters
   params_1_to_5 <- plogis(
     qlogis(params_prev[1:5]) +
@@ -127,9 +129,10 @@ lfmcmc_proposal_fun <- function(params_prev) {
 #' @param simulated_stats Vector of numeric summary stats for simulated data.
 #' @param observed_stats Vector of numeric summary stats for observed data.
 #' @param epsilon Numeric epsilon value.
+#' @param lfmcmc_obj Object of class [LFMCMC].
 #'
 #' @returns A numeric kernel score.
-lfmcmc_kernel_fun <- function(simulated_stats, observed_stats, epsilon) {
+lfmcmc_kernel_fun <- function(simulated_stats, observed_stats, epsilon, lfmcmc_obj) {
   diff <- ((simulated_stats - observed_stats)^2)^epsilon
   dnorm(sqrt(sum(diff)))
 }
@@ -247,9 +250,10 @@ stats_names <- c(
 #' counts.
 #'
 #' @param params Vector of numeric model parameters.
+#' @param lfmcmc_obj Object of class [LFMCMC].
 #'
 #' @returns A simulated set of COVID-19 case counts.
-lfmcmc_simulation_fun <- function(params) {
+lfmcmc_simulation_fun <- function(params, lfmcmc_obj) {
   # Extract parameters
   r_rate          <- params[1]
   t_rate_spring   <- params[2]
@@ -325,9 +329,9 @@ calibration_lfmcmc <- LFMCMC(covid_sirconn_model) |>
 # Run LFMCMC calibration
 run_lfmcmc(
   lfmcmc = calibration_lfmcmc,
-  params_init_ = init_lfmcmc_params,
-  n_samples_ = lfmcmc_n_samples,
-  epsilon_ = lfmcmc_epsilon,
+  params_init = init_lfmcmc_params,
+  n_samples = lfmcmc_n_samples,
+  epsilon = lfmcmc_epsilon,
   seed = model_seed
 )
 set_params_names(calibration_lfmcmc, param_names)
