@@ -9,6 +9,18 @@ library(tidyr)
 ## HELPER FUNCTIONS
 ## ----------------------------------
 
+#' Get COVID-19 case counts from UDHHS
+#'
+#' @description
+#' `get_covid_data` downloads the COVID-19 dataset from UDHHS.
+#'
+#' @details
+#' This function downloads the COVID-19 daily case count dataset
+#' from UDHHS, returning the data from the last N days.
+#'
+#' @param n_days Integer value.
+#'
+#' @returns The COVID-19 case count data.
 get_covid_data <- function(n_days) {
   # Download the Trends data from Utah DHSS
   # - URL for UDHHS COVID-19 data (returns a zip archive with multiple files)
@@ -16,23 +28,39 @@ get_covid_data <- function(n_days) {
   # - Target file from the above zip archive
   target_file_regex <- "Trends_Epidemic+"
   # - Perform data extraction
-  forecast_data <- get_data_from_url(data_url, target_file_regex)
+  covid_data <- get_data_from_url(data_url, target_file_regex)
   # - Format date column properly
-  forecast_data$Date <- as.Date(forecast_data$Date)
+  covid_data$Date <- as.Date(covid_data$Date)
 
   # Extract last n_days of data
-  last_date <- max(forecast_data$Date)
-  forecast_data <- forecast_data[forecast_data$Date > (last_date - n_days), ]
-  return(forecast_data) # TODO: remove return statements
+  last_date <- max(covid_data$Date)
+  covid_data <- covid_data[covid_data$Date > (last_date - n_days), ]
+  return(covid_data)
 }
 
 ## ----------------------------------
 ## LFMCMC FUNCTIONS
 ## ----------------------------------
 
-# Define the LFMCMC summary function
+#' Define the LFMCMC summary function
+#'
+#' @description
+#' `lfmcmc_summary_fun` defines the summary function for LFMCMC.
+#'
+#' @details
+#' In LFMCMC, the summary function computes summary statistics which
+#' are used to compare the simulation function output with the observed
+#' data. It must perform the same with the observed dataset
+#' as it does with the results of the LFMCMC simulation function.
+#' This function takes a vector of case counts and computes
+#' `time_to_peak` (how many days to the highest case count),
+#' `size_of_peak`, as well as the mean and standard deviation.
+#'
+#' @param case_counts Vector of integer case counts.
+#'
+#' @returns A vector of summary statistics.
 lfmcmc_summary_fun <- function(case_counts) {
-  # Extract summary statistics from the data
+
   time_to_peak <- which.max(case_counts)
   size_of_peak <- case_counts[time_to_peak]
   mean_cases <- mean(case_counts)
@@ -46,7 +74,21 @@ lfmcmc_summary_fun <- function(case_counts) {
   )
 }
 
-# Define the LFMCMC summary function
+#' Define the LFMCMC proposal function
+#'
+#' @description
+#' `lfmcmc_proposal_fun` defines the proposal function for LFMCMC.
+#'
+#' @details
+#' In LFMCMC, the proposal function generates new model parameters
+#' to be used in the next run of the simulation function.
+#' This function takes a vector of parameters (the set used in
+#' the previous run) and takes a random step from those values
+#' to compute new ("proposed") values.
+#'
+#' @param params_prev Vector of numeric parameter values.
+#'
+#' @returns A vector of proposed parameter values.
 lfmcmc_proposal_fun <- function(params_prev) {
   # Propose new model parameters
   params_1_to_5 <- plogis(
@@ -72,15 +114,39 @@ lfmcmc_proposal_fun <- function(params_prev) {
   c(params_1_to_5, params_6_to_7)
 }
 
-# Define the LFMCMC kernel function
-# - Weighs simulation results against observed data
+#' Define the LFMCMC kernel function
+#'
+#' @description
+#' `lfmcmc_kernel_fun` defines the kernel function for LFMCMC.
+#'
+#' @details
+#' In LFMCMC, the kernel function weighs the summary statistics from
+#' the latest run of the simulation function against the summary
+#' statistics of the observed data.
+#'
+#' @param simulated_stats Vector of numeric summary stats for simulated data.
+#' @param observed_stats Vector of numeric summary stats for observed data.
+#' @param epsilon Numeric epsilon value.
+#'
+#' @returns A numeric kernel score.
 lfmcmc_kernel_fun <- function(simulated_stats, observed_stats, epsilon) {
   diff <- ((simulated_stats - observed_stats)^2)^epsilon
   dnorm(sqrt(sum(diff)))
 }
 
-# Function to return accepted parameters from LFMCMC
-# TODO: Refactor to reduce function inputs
+#' Get a sample of accepted parameters from LFMCMC
+#'
+#' @description
+#' `get_params_sample` gets a sample of accepted parameters from the
+#' LFMCMC run after the burn-in period.
+#'
+#' @param lfmcmc_obj Object of class [LFMCMC].
+#' @param total_samples Integer total samples from the LFMCMC object.
+#' @param burnin Integer burn-in period for the LFMCMC object.
+#' @param sample_size Integer number of samples to take.
+#'
+#' @returns An array of numeric vectors where each
+#' vector represents a single sample set of parameters.
 get_params_sample <- function(lfmcmc_obj, total_samples, burnin, sample_size) {
   accepted_params <- get_accepted_params(lfmcmc_obj)
   burnin_sample <- tail(accepted_params, n = (total_samples - burnin))
@@ -165,7 +231,24 @@ stats_names <- c(
   "Standard deviation (cases)"
 )
 
-# Define the LFMCMC simulation function
+#' Define the LFMCMC simulation function
+#'
+#' @description
+#' `lfmcmc_simulation_fun` defines the simulation function for LFMCMC.
+#'
+#' @details
+#' In LFMCMC, the simulation function run the model with the proposed
+#' parameters and returns a simulated dataset that looks like the
+#' observed dataset. This simulation function runs the SIR CONN
+#' model created in earlier steps with the given model parameters,
+#' adjusting contact rates for weekday vs weekend and adjusting
+#' transmission rates based on the season. It then returns a set
+#' of COVID-19 case counts for the same period as the observed case
+#' counts.
+#'
+#' @param params Vector of numeric model parameters.
+#'
+#' @returns A simulated set of COVID-19 case counts.
 lfmcmc_simulation_fun <- function(params) {
   # Extract parameters
   r_rate          <- params[1]
