@@ -55,7 +55,7 @@ Here is the posterior distribution of the LFMCMC samples with vertical lines rep
 
 ```{r}
 #| label: plot-posterior-dist
-plot_lfmcmc_post_dist(calibration_lfmcmc, param_names, init_lfmcmc_params, seasons)
+plot_lfmcmc_post_dist(calibration_lfmcmc, init_lfmcmc_params, param_names, seasons)
 ```
 
 ## Epiworld Forecast
