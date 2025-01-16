@@ -40,7 +40,7 @@ plot_covid_data <- function(data) {
 #' @returns The plot of the posterior distribution of model parameters.
 plot_lfmcmc_post_dist <- function(lfmcmc_object, init_params, param_names, seasons) {
 
-  accepted_params <- get_accepted_params(lfmcmc_object)
+  accepted_params <- get_all_accepted_params(lfmcmc_object)
   accepted_params <- lapply(seq_along(param_names), \(i) {
     data.frame(
       step  = seq_len(nrow(accepted_params)),

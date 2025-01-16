@@ -151,7 +151,7 @@ lfmcmc_kernel_fun <- function(simulated_stats, observed_stats, epsilon, lfmcmc_o
 #' @returns An array of numeric vectors where each
 #' vector represents a single sample set of parameters.
 get_params_sample <- function(lfmcmc_obj, total_samples, burnin, sample_size) {
-  accepted_params <- get_accepted_params(lfmcmc_obj)
+  accepted_params <- get_all_accepted_params(lfmcmc_obj)
   burnin_sample <- tail(accepted_params, n = (total_samples - burnin))
   params_sample <- burnin_sample[sample(nrow(burnin_sample), sample_size), ]
   return(params_sample)
