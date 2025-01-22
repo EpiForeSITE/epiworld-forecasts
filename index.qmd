@@ -1,73 +1,26 @@
 ---
-title: "Weekly COVID-19 Forecast for Utah"
+title: "14-Day COVID-19 Forecast for Utah"
 date: last-modified
 execute:
   echo: false
 ---
 
-## Introduction
-
-Using case data published by the Utah DHHS and the [epiworldR](https://github.com/UofUEpiBio/epiworldR) package, we calibrate and run an SIR connected model to generate a COVID-19 forecast for Utah, which is published weekly.
-
-## COVID-19 Cases in Utah (last 90 days)
-Every week, Utah DHHS publishes COVID-19 surveillance data on their [Coronavirus Dashboard](https://coronavirus.utah.gov/case-counts/) which includes reported case counts for each day starting March 18, 2020.
-Our forecast is calibrated on case counts from the last 90 days.
-
 ```{r}
-#| label: get-data
-# Load in needed files
+#| label: load-forecast-script
 source("covid-forecast.R")
 ```
 
-```{r}
-#| label: plot-observed-data
-#| fig-width: 7
-#| fig-height: 3
-#| fig-align: center
-plot_covid_data(covid_data)
-```
+## Introduction
 
-## Calibrating the Forecasting Model
-We use epiworldR's implementation of Likelihood-Free Markhov Chain Monte Carlo (LFMCMC) to calibrate the SIR connected model (using ModelSIRCONN from epiworldR) by estimating the following model parameters:
+Using case count data published by the Utah DHHS and the [epiworldR](https://github.com/UofUEpiBio/epiworldR) package, we calibrate and run an SIR connected model to generate a COVID-19 forecast for Utah.
+The 14-day forecast updates automatically each week.
 
-* Recovery rate
-* Transmission rates for each season (spring, summer, fall, winter)
-* Contact rates for weekdays and weekends
-
-The LFMCMC simulation runs for 6,000 iterations.
-In each iteration, it does the following:
-
-* Proposes a new set of parameter values
-* Runs the model with 10,000 agents and the proposed parameters
-* Compares the output to the UDHHS data and records the result
-
-We note that while the population of Utah over 3 million, we only need to run our model with 10,000 agents.
-This is because we don't expect more than 10,000 COVID-19 cases and the model automatically scales the contact rate to account for the difference between the model population and Utah's population.
-
-When the simulation is finished, we use a burn-in period of n = 2,000 (33% of simulation iterations).
-The epiworldR results printout (below) shows the mean parameter/statistic value, the 95% credible interval (in [ ]), and the initial/observed value (in ()).
-```{r}
-#| label: print-lfmcmc-results
-print(calibration_lfmcmc, burnin = lfmcmc_burnin)
-```
-
-Here is the posterior distribution of the LFMCMC samples with vertical lines representing the initial parameter values.
+## COVID-19 Forecast
+Here is the forecast mean along with the 50% and 95% confidence intervals.
+The actual case counts are plotted in black, while the forecast is plotted in blue.
 
 ```{r}
-#| label: plot-posterior-dist
-plot_lfmcmc_post_dist(calibration_lfmcmc, init_lfmcmc_params, param_names, seasons)
-```
-
-## Epiworld Forecast
-
-We can now run the forecast.
-Our model prevalence is set according to the reported case counts of the most recent day of the UDHHS data.
-We then take a sample of n = 200 from the LFMCMC accepted parameters (after the burn-in period) and run the SIR connected model with the new prevalence for each set of parameters.
-Each simulation is for two weeks, giving us a 14-day forecast of COVID-19 in Utah.
-The forecast mean is shown below along with the 50% and 95% confidence intervals.
-
-```{r}
-#| label: run-forecast
+#| label: plot-forecast
 plot_forecast(forecast_dist, covid_data)
 ```
 

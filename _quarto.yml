@@ -8,7 +8,9 @@ website:
     logo: logo.png
     left:
       - href: index.qmd
-        text: Weekly COVID-19 Forecast
+        text: 14-Day COVID-19 Forecast
+      - href: methodology.qmd
+        text: Methodology
       - href: about.qmd
         text: About
   repo-url: https://github.com/EpiForeSITE/epiworld-forecasts
