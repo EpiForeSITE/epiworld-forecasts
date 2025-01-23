@@ -327,6 +327,7 @@ calibration_lfmcmc <- LFMCMC(covid_sirconn_model) |>
   set_observed_data(covid_cases)
 
 # Run LFMCMC calibration
+verbose_off(calibration_lfmcmc)
 run_lfmcmc(
   lfmcmc = calibration_lfmcmc,
   params_init = init_lfmcmc_params,
