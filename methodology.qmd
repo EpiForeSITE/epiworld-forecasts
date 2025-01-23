@@ -12,11 +12,14 @@ source("covid-forecast.R")
 
 ## Introduction
 
-Here we provide details on our methodology for calibrating and running our forecast.
+Here we provide details on our methodology for calibrating and running our forecast, as well as a description of the technologies powering the **`epiworld-forecasts`** tool.
+
+## Forecast Methodology
+
 We use case count data published weekly by the Utah DHHS.
 The calibration and SIR connected model are run using the [epiworldR](https://github.com/UofUEpiBio/epiworldR) package.
 
-## COVID-19 Cases in Utah (last 90 days)
+### COVID-19 Cases in Utah (last 90 days)
 Every week, Utah DHHS publishes COVID-19 surveillance data on their [Coronavirus Dashboard](https://coronavirus.utah.gov/case-counts/) which includes reported case counts for each day starting March 18, 2020.
 Our forecast is calibrated on case counts from the last 90 days.
 
@@ -28,7 +31,7 @@ Our forecast is calibrated on case counts from the last 90 days.
 plot_covid_data(covid_data)
 ```
 
-## Calibrating the Forecasting Model
+### Calibrating the Forecasting Model
 We use epiworldR's implementation of Likelihood-Free Markhov Chain Monte Carlo (LFMCMC) to calibrate the SIR connected model (using ModelSIRCONN from epiworldR) by estimating the following model parameters:
 
 * Recovery rate
@@ -60,7 +63,7 @@ Here is the posterior distribution of the LFMCMC samples with vertical lines rep
 plot_lfmcmc_post_dist(calibration_lfmcmc, init_lfmcmc_params, param_names, seasons)
 ```
 
-## COVID-19 Forecast
+### COVID-19 Forecast
 
 We can now run the forecast.
 Our model prevalence is set according to the reported case counts of the most recent day of the UDHHS data.
@@ -73,3 +76,15 @@ The actual case counts are plotted in black, while the forecast is plotted in bl
 #| label: plot-forecast
 plot_forecast(forecast_dist, covid_data)
 ```
+
+## Technologies
+
+**`epiworld-forecasts`** is built with the following technologies:
+
+* **epiworldR:** Fast agent-based modeling R package for disease simulations
+* **Docker:** The forecast runs inside a Docker container which has all the needed packages. This container is built in a separate workflow and pushed to the GitHub Container Registry.
+* **GitHub Actions:** The forecast runs on a schedule through GitHub Actions
+* **Quarto:** Generates the HTML report that is published to GitHub Pages
+* **GitHub:** Version control, hosting the source code repository and website
+
+![`epiworld-forecasts` technologies](assets/tech-chart.png)
