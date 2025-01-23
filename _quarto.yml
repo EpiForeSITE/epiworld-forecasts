@@ -5,7 +5,7 @@ project:
 website:
   title: "Epiworld Forecasts"
   navbar:
-    logo: logo.png
+    logo: assets/foresite-logo.png
     left:
       - href: index.qmd
         text: 14-Day COVID-19 Forecast
