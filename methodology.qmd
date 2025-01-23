@@ -87,4 +87,4 @@ plot_forecast(forecast_dist, covid_data)
 * **Quarto:** Generates the HTML report that is published to GitHub Pages
 * **GitHub:** Version control, hosting the source code repository and website
 
-![`epiworld-forecasts` technologies](assets/tech-chart.png)
+![](assets/tech-chart.png)
