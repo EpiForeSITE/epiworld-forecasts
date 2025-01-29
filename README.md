@@ -36,7 +36,16 @@ The forecast updates weekly and is published to [this website](https://epiforesi
 
 # Adapting `epiworld-forecasts` for Your Needs
 
+The core of this tool is the pipeline technologies (GHA Actions, Docker, Quarto) that allow the forecast to run automatically.
+As such, the tool can be adapted for different:
 
+* Data sources
+* Model calibrations
+* Forecast characteristics (algorithm used, duration of forecast, etc.)
+* Report characteristics (text, figures, etc.)
+* Publishing destinations (website, PDF, etc.)
+* Forecast schedules
+* Docker containers
 
 ## Data Sources
 For our example forecast, we use the [weekly reports](https://coronavirus.utah.gov/case-counts/) published by Utah DHHS on COVID-19.
