@@ -34,7 +34,7 @@ The forecast updates weekly and is published to [this website](https://epiforesi
 ![](assets/process-flow-chart.png)
 
 
-# Adapting `epiworld-forecasts` for Your Needs
+## Adapting `epiworld-forecasts` for Your Needs
 
 The core of this tool is the pipeline technologies (GHA Actions, Docker, Quarto) that allow the forecast to run automatically.
 As such, the tool can be adapted for different:
@@ -46,6 +46,39 @@ As such, the tool can be adapted for different:
 * Publishing destinations (website, PDF, etc.)
 * Forecast schedules
 * Docker containers
+
+### Breakdown of `epiworld-forecasts` files
+
+Below is a description of each core file in the `epiworld-forecasts` tool and how you might want to modify the file for your specific project needs.
+
+R files:
+* [**`forecast-pkg.R`**](./forecast-pkg.R): Adds libraries and generic functions for running a forecast.
+    * This file will likely require the fewest modifications, because the functions are agnostic to a specific disease forecast.
+    * In our example, this file:
+        * Loads the `epiworldR` library
+        * Defines function for getting data from a given URL
+        * Defines functions for computing the season from a date
+
+* [**`plot-forecast.R`**](./plot-forecast.R): Adds libraries and functions for plotting forecast outputs.
+    * All of your visualization functions go in here. This file will require modifications to accommodate the shape of your data and what you desire to visualize.
+    * In our example, this file:
+        * Loads the `ggplot2` library
+        * Defines functions for plotting observed data, LFMCMC parameter posterior distributions, and the final forecast
+* [**`covid-forecast.R`**](./covid-forecast.R): Runs the forecast
+    * In our example, this file:
+        * Loads the `tidyr` library
+
+
+Quarto (website) files:
+* [**`_quarto.yml`**](./_quarto.yml):
+* [**`index.qmd`**](./index.qmd):
+* [**`methodology.qmd`**](./methodology.qmd):
+* [**`about.qmd`**](./about.qmd):
+
+Automation files:
+* [**`.github/workflows/run-forecast.yml`**](./.github/workflows/run-forecast.yml):
+* [**`.devcontainer/Dockerfile`**](./.devcontainer/Dockerfile):
+* [**`.github/workflows/build-docker-image.yml`**](./.github/workflows/build-docker-image.yml):
 
 ## Data Sources
 For our example forecast, we use the [weekly reports](https://coronavirus.utah.gov/case-counts/) published by Utah DHHS on COVID-19.
