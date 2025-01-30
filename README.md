@@ -50,14 +50,14 @@ As such, the tool can be adapted for different:
 You can make adaptations to these features by modifying the following key files:
 
 [**`forecast.R`**](./forecast.R) contains the core logic for the forecast divided up into the following sections:
-* Libraries: Loads required libraries, such as `epiworldR` and `ggplot2`
-* Gather Data: Defines functions for getting the data to calibration the forecast
-* Process Data: Defines functions for processing data for the forecast
-* Model Definition: Defines the disease model (e.g., SIR connected), including initial disease parameters
-* Model Calibration: Defines the functions and variables for calibrating the forecast model (e.g., LFMCMC)
-* Run Model Calibration: Executes the calibration functions defined above
-* Run Forecast: Runs the forecast with the calibrated model
-* Forecast Visualizations: Defines functions for visualizing forecast data
+* *Libraries:* Loads required libraries, such as `epiworldR` and `ggplot2`
+* *Gather Data:* Defines functions for getting the data to calibration the forecast
+* *Process Data:* Defines functions for processing data for the forecast
+* *Model Definition:* Defines the disease model (e.g., SIR connected), including initial disease parameters
+* *Model Calibration:* Defines the functions and variables for calibrating the forecast model (e.g., LFMCMC)
+* *Run Model Calibration:* Executes the calibration functions defined above
+* *Run Forecast:* Runs the forecast with the calibrated model
+* *Forecast Visualizations:* Defines functions for visualizing forecast data
 All of these sections can be modified freely to produce your intended forecast.
 
 [**`index.qmd`**](./index.qmd) defines the `index.html` page for the final generated forecast report.
