@@ -52,23 +52,15 @@ As such, the tool can be adapted for different:
 Below is a description of each core file in the `epiworld-forecasts` tool and how you might want to modify the file for your specific project needs.
 
 R files:
-* [**`forecast-pkg.R`**](./forecast-pkg.R): Adds libraries and generic functions for running a forecast.
-    * This file will likely require the fewest modifications, because the functions are agnostic to a specific disease forecast.
-    * In our example, this file:
-        * Loads the `epiworldR` library
-        * Defines function for getting data from a given URL
-        * Defines functions for computing the season from a date
-
-* [**`plot-forecast.R`**](./plot-forecast.R): Adds libraries and functions for plotting forecast outputs.
-    * All of your visualization functions go in here. This file will require modifications to accommodate the shape of your data and what you desire to visualize.
-    * In our example, this file:
-        * Loads the `ggplot2` library
-        * Defines functions for plotting observed data, LFMCMC parameter posterior distributions, and the final forecast
-* [**`covid-forecast.R`**](./covid-forecast.R): Runs the forecast
-    * In our example, this file:
-        * Loads the `tidyr` library
-        * Defines all other functions for running the forecast
-
+* [**`forecast.R`**](./forecast.R): Contains the core logic for the forecast divided up into the following sections:
+    * Libraries: Loads required libraries, such as `epiworldR` and `ggplot2`
+    * Gather Data: Defines functions for getting the data to calibration the forecast
+    * Process Data: Defines functions for processing data for the forecast
+    * Model Definition: Defines the disease model (e.g., SIR connected), including initial disease parameters
+    * Model Calibration: Defines the functions and variables for calibrating the forecast model (e.g., LFMCMC)
+    * Run Model Calibration: Executes the calibration functions defined above
+    * Run Forecast: Runs the forecast with the calibrated model
+    * Forecast Visualizations: Defines functions for visualizing forecast data
 
 Quarto (website) files:
 * [**`_quarto.yml`**](./_quarto.yml): Defines the structure of the website
