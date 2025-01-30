@@ -47,31 +47,35 @@ As such, the tool can be adapted for different:
 * Forecast schedules
 * Docker containers
 
-### Breakdown of `epiworld-forecasts` files
+You can make adaptations to these features by modifying the following key files:
 
-Below is a description of each core file in the `epiworld-forecasts` tool and how you might want to modify the file for your specific project needs.
+[**`forecast.R`**](./forecast.R) contains the core logic for the forecast divided up into the following sections:
+* Libraries: Loads required libraries, such as `epiworldR` and `ggplot2`
+* Gather Data: Defines functions for getting the data to calibration the forecast
+* Process Data: Defines functions for processing data for the forecast
+* Model Definition: Defines the disease model (e.g., SIR connected), including initial disease parameters
+* Model Calibration: Defines the functions and variables for calibrating the forecast model (e.g., LFMCMC)
+* Run Model Calibration: Executes the calibration functions defined above
+* Run Forecast: Runs the forecast with the calibrated model
+* Forecast Visualizations: Defines functions for visualizing forecast data
+All of these sections can be modified freely to produce your intended forecast.
 
-R files:
-* [**`forecast.R`**](./forecast.R): Contains the core logic for the forecast divided up into the following sections:
-    * Libraries: Loads required libraries, such as `epiworldR` and `ggplot2`
-    * Gather Data: Defines functions for getting the data to calibration the forecast
-    * Process Data: Defines functions for processing data for the forecast
-    * Model Definition: Defines the disease model (e.g., SIR connected), including initial disease parameters
-    * Model Calibration: Defines the functions and variables for calibrating the forecast model (e.g., LFMCMC)
-    * Run Model Calibration: Executes the calibration functions defined above
-    * Run Forecast: Runs the forecast with the calibrated model
-    * Forecast Visualizations: Defines functions for visualizing forecast data
+[**`index.qmd`**](./index.qmd) defines the `index.html` page for the final generated forecast report.
+This file should always start with `source("forecast.R")` to run the forecast and load in all relevant functions, but most subsections will only call printing or plotting functions (as defined in the "Forecast Visualizations" section of `forecast.R`).
+By dividing the "business" logic from the HTML render logic, we make it easier to run the code outside of the Quarto file and also allow multiple web pages to show different visualizations from the same forecast run.
+This file can also be freely customized to your needs.
 
-Quarto (website) files:
-* [**`_quarto.yml`**](./_quarto.yml): Defines the structure of the website
-* [**`index.qmd`**](./index.qmd): Runs the forecast and plots relevant data
-* [**`methodology.qmd`**](./methodology.qmd): Runs the forecast and plots relevant data
-* [**`about.qmd`**](./about.qmd): Describes the purpose of the forecast
+[**`run-forecast.yml`**](./.github/workflows/run-forecast.yml) contains the GitHub Actions workflow for running the forecast automatically.
+This includes setting the schedule and uploading the HTML forecast report to GitHub Pages, which is what you will most likely be modifying for your project.
+Take careful consideration before modifying anything other than the schedule and publishing destination to avoid breaking the workflow.
 
-Automation files:
-* [**`.github/workflows/run-forecast.yml`**](./.github/workflows/run-forecast.yml): Runs the forecast on a schedule
-* [**`.devcontainer/Dockerfile`**](./.devcontainer/Dockerfile): Defines the Docker image for running the forecast
-* [**`.github/workflows/build-docker-image.yml`**](./.github/workflows/build-docker-image.yml): Builds the Docker image and pushes to GH Container Registry so the forecast and GHA can use it
+[**`Dockerfile`**](./.devcontainer/Dockerfile) defines the Docker image for running the forecast.
+This should contain all the packages you need for your forecast (e.g., `epiworldR`, `ggplot2`, etc.).
+We have a separate GHA workflow file for [building the Docker image](./.github/workflows/build-docker-image.yml) from the Dockerfile so it can be used by the GHAs.
+
+Our example features additional [Methodology](./methodology.qmd) and [About](./about.qmd) pages, but these are not required for your project.
+Adjust the global website settings in the [`_quarto.yml`](./_quarto.yml) file.
+
 
 ## Data Sources
 For our example forecast, we use the [weekly reports](https://coronavirus.utah.gov/case-counts/) published by Utah DHHS on COVID-19.
