@@ -7,7 +7,7 @@ execute:
 
 ```{r}
 #| label: load-forecast-script
-source("covid-forecast.R")
+source("forecast.R")
 ```
 
 ## Introduction
