@@ -67,18 +67,19 @@ R files:
 * [**`covid-forecast.R`**](./covid-forecast.R): Runs the forecast
     * In our example, this file:
         * Loads the `tidyr` library
+        * Defines all other functions for running the forecast
 
 
 Quarto (website) files:
-* [**`_quarto.yml`**](./_quarto.yml):
-* [**`index.qmd`**](./index.qmd):
-* [**`methodology.qmd`**](./methodology.qmd):
-* [**`about.qmd`**](./about.qmd):
+* [**`_quarto.yml`**](./_quarto.yml): Defines the structure of the website
+* [**`index.qmd`**](./index.qmd): Runs the forecast and plots relevant data
+* [**`methodology.qmd`**](./methodology.qmd): Runs the forecast and plots relevant data
+* [**`about.qmd`**](./about.qmd): Describes the purpose of the forecast
 
 Automation files:
-* [**`.github/workflows/run-forecast.yml`**](./.github/workflows/run-forecast.yml):
-* [**`.devcontainer/Dockerfile`**](./.devcontainer/Dockerfile):
-* [**`.github/workflows/build-docker-image.yml`**](./.github/workflows/build-docker-image.yml):
+* [**`.github/workflows/run-forecast.yml`**](./.github/workflows/run-forecast.yml): Runs the forecast on a schedule
+* [**`.devcontainer/Dockerfile`**](./.devcontainer/Dockerfile): Defines the Docker image for running the forecast
+* [**`.github/workflows/build-docker-image.yml`**](./.github/workflows/build-docker-image.yml): Builds the Docker image and pushes to GH Container Registry so the forecast and GHA can use it
 
 ## Data Sources
 For our example forecast, we use the [weekly reports](https://coronavirus.utah.gov/case-counts/) published by Utah DHHS on COVID-19.
