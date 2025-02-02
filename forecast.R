@@ -172,8 +172,8 @@ model_n             <- 10000    # model population size
 
 # Define initial disease parameters
 init_prevalence <- covid_cases[1] / model_n
-init_contact_rate <- 10
-init_transmission_rate <- 0.05
+init_contact_rate <- 20
+init_transmission_rate <- 0.025
 init_recovery_rate <- 1 / 7
 
 # Create the SIRCONN model
@@ -391,17 +391,17 @@ get_params_sample <- function(lfmcmc_obj, total_samples, burnin, sample_size) {
 }
 
 # Define LFMCMC parameters
-lfmcmc_n_samples <- 6000   # number of LFMCMC iterations
-lfmcmc_burnin <- 2000    # burn-in period
+lfmcmc_n_samples <- 2000   # number of LFMCMC iterations
+lfmcmc_burnin <- 1000    # burn-in period
 lfmcmc_epsilon <- 0.25
 
 init_lfmcmc_params <- c(
   1 / 7,  # r_rate
-  0.05,   # t_rate_spring
-  0.04,   # t_rate_summer
-  0.06,   # t_rate_fall
-  0.07,   # t_rate_winter
-  10,     # c_rate_weekday
+  0.025,   # t_rate_spring
+  0.02,   # t_rate_summer
+  0.03,   # t_rate_fall
+  0.035,   # t_rate_winter
+  20,     # c_rate_weekday
   2       # c_rate_weekend
 )
 param_names <- c(
