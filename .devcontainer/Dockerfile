@@ -2,6 +2,8 @@
 # - R, quarto, data.table, ggplot2
 FROM rocker/tidyverse:4.4.1
 
+RUN apt-get update && apt-get install git -y --no-install-recommends
+
 # Install epiworldR
 RUN installGithub.r UofUEpiBio/epiworldR@30afdce
 
