@@ -398,7 +398,12 @@ plot_covid_data <- function(data) {
 #' @param seasons The dictionary of season start positions.
 #'
 #' @returns The plot of the posterior distribution of model parameters.
-plot_lfmcmc_post_dist <- function(lfmcmc_object, init_params, param_names, seasons) {
+plot_lfmcmc_post_dist <- function(
+  lfmcmc_object,
+  init_params,
+  param_names,
+  seasons
+  ) {
 
   accepted_params <- get_all_accepted_params(lfmcmc_object)
   accepted_params <- lapply(seq_along(param_names), \(i) {
@@ -476,9 +481,18 @@ plot_lfmcmc_post_dist <- function(lfmcmc_object, init_params, param_names, seaso
 #' @param covid_data A data frame of observed COVID-19 case counts.
 #'
 #' @returns The plot of the forecasted COVID-19 case counts.
-plot_forecast <- function(forecast_dist, covid_data) {
+plot_forecast <- function(
+  forecast_dist,
+  covid_data,
+  c(0.025, 0.25, 0.5, 0.75, 0.975)
+  ) {
+
   # Find 2.5%, 25%, 50%, 75%, and 97.5% quantiles
-  forecast_quantiles <- apply(forecast_dist, 1, quantile, probs = c(0.025, 0.25, 0.5, 0.75, 0.975))
+  forecast_quantiles <- apply(
+    forecast_dist, 1,
+    quantile,
+    probs = probs
+    )
 
   # Combine observed data with sample median for plotting forecast
   observed_df <- data.frame(
@@ -521,8 +535,10 @@ plot_forecast <- function(forecast_dist, covid_data) {
     geom_line(aes(y = counts,
       color = observed)) +
     labs(x = "Date", y = "Daily Cases") +
-    scale_colour_manual(values = cbb_palette,
-      labels = c("Forecasted Cases", "Observed Cases")) +
+    scale_colour_manual(
+      values = cbb_palette,
+      labels = c("Forecasted Cases (median)", "Observed Cases")
+      ) +
     scale_y_continuous(n.breaks = 20) +
     theme_bw()
 }
