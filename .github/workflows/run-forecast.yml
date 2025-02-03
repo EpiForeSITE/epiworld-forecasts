@@ -44,9 +44,7 @@ jobs:
 
       - name: Render forecast quarto site
         run: |
-          quarto render methodology.qmd
           quarto render
-
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4

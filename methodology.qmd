@@ -2,13 +2,12 @@
 title: "Methodology"
 date: last-modified
 execute:
-  echo: false
   cache: true
 ---
 
 ```{r}
 #| label: load-forecast-script
-source("forecast.R")
+source("functions.R")
 ```
 
 ## Introduction
@@ -90,7 +89,7 @@ covid_sirconn_model <- ModelSIRCONN(
 )
 ```
 
-We then continue setting the model parameters. The definition of the model itself is in the [`forecast.R`](./forecast.R) script.
+We then continue setting the model parameters. The definition of the model itself is in the [`functions.R`](./functions.R) script.
 
 
 ```{r}
