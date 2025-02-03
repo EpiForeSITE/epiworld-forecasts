@@ -18,9 +18,9 @@ system2("quarto", c("render", "methodology.qmd"))
 
 source("functions.R")
 fn <- sprintf(
-    "forecast_data_%s.rds",
-    format(Sys.time(), "%Y-%m-%d")
-  )
+  "forecast_data_%s.rds",
+  format(Sys.time(), "%Y-%m-%d")
+)
 
 forecast <- readRDS(fn)
 ```
