@@ -187,7 +187,7 @@ plot_lfmcmc_post_dist(
   init_lfmcmc_params,
   param_names,
   seasons
-  )
+)
 ```
 
 We can now run the forecast.
