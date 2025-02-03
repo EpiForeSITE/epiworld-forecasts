@@ -3,6 +3,7 @@ title: "Methodology"
 date: last-modified
 execute:
   echo: false
+  cache: true
 ---
 
 ```{r}
@@ -225,6 +226,20 @@ The actual case counts are plotted in black, while the forecast is plotted in bl
 ```{r}
 #| label: plot-forecast
 plot_forecast(forecast_dist, covid_data)
+```
+
+```{r}
+#| label: saving
+saveRDS(
+  list(
+    forecast_dist = forecast_dist,
+    covid_data = covid_data
+  ),
+  sprintf(
+    "forecast_data_%s.rds",
+    format(Sys.time(), "%Y-%m-%d")
+  )
+)
 ```
 
 ## Technologies
