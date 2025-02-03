@@ -96,7 +96,7 @@ We then continue setting the model parameters. The definition of the model itsel
 ```{r}
 # Define LFMCMC parameters
 lfmcmc_n_samples <- 1000   # number of LFMCMC iterations
-lfmcmc_burnin <- floor(lfmcmc_n_samples/2)    # burn-in period
+lfmcmc_burnin <- floor(lfmcmc_n_samples / 2)    # burn-in period
 lfmcmc_epsilon <- 0.25
 
 init_lfmcmc_params <- c(
@@ -124,7 +124,6 @@ stats_names <- c(
   "Mean (cases)",
   "Standard deviation (cases)"
 )
-
 ```
 
 With all the needed components for the LFMCMC, we can now run the calibration.
@@ -169,13 +168,13 @@ accepted <- lapply(seq_len(ncol(accepted)), \(i) {
     name = param_names[i],
     value = accepted[, i]
   )
-}) |> do.call(what="rbind")
+}) |> do.call(what = "rbind")
 
 ggplot(accepted, aes(x = iteration, y = value, color = name)) +
   geom_line() +
   labs(title = "LFMCMC Trace Plot",
-       x = "Iteration",
-       y = "Parameter value") +
+    x = "Iteration",
+    y = "Parameter value") +
   facet_wrap(~name, scales = "free_y") +
   theme_minimal()
 ```
