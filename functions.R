@@ -479,12 +479,13 @@ plot_lfmcmc_post_dist <- function(
 #'
 #' @param forecast_dist An array of forecasted case counts.
 #' @param covid_data A data frame of observed COVID-19 case counts.
+#' @param probs A numeric vector of probabilities for credible interval.
 #'
 #' @returns The plot of the forecasted COVID-19 case counts.
 plot_forecast <- function(
   forecast_dist,
   covid_data,
-  c(0.025, 0.25, 0.5, 0.75, 0.975)
+  probs = c(0.025, 0.25, 0.5, 0.75, 0.975)
   ) {
 
   # Find 2.5%, 25%, 50%, 75%, and 97.5% quantiles
