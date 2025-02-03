@@ -6,8 +6,23 @@ execute:
 ---
 
 ```{r}
-#| label: load-forecast-script
-source("forecast.R")
+#| label: run-the-forecast
+# This will render the methodology file, that generates the forecast
+# Since we have `cache: true` in `methodology.qmd`, computations are
+# cached and will not be re-run if the file has not changed.
+system2("quarto", c("render", "methodology.qmd"))
+```
+
+```{r}
+#| label: load-forecasts
+
+source("functions.R")
+fn <- sprintf(
+  "forecast_data_%s.rds",
+  format(Sys.time(), "%Y-%m-%d")
+)
+
+forecast <- readRDS(fn)
 ```
 
 ## Introduction
@@ -21,7 +36,7 @@ The actual case counts are plotted in black, while the forecast is plotted in bl
 
 ```{r}
 #| label: plot-forecast
-plot_forecast(forecast_dist, covid_data)
+with(forecast, plot_forecast(forecast_dist, covid_data))
 ```
 
 ## Acknowledgements

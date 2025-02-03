@@ -49,7 +49,7 @@ As such, the tool can be adapted for different:
 
 You can make adaptations to these features by modifying the following key files:
 
-[**`forecast.R`**](./forecast.R) contains the core logic for the forecast divided up into the following sections:
+[**`function.R`**](./functions.R) contains the core logic for the forecast divided up into the following sections:
 * *Libraries:* Loads required libraries, such as `epiworldR` and `ggplot2`
 * *Gather Data:* Defines functions for getting the data to calibration the forecast
 * *Process Data:* Defines functions for processing data for the forecast
@@ -61,7 +61,7 @@ You can make adaptations to these features by modifying the following key files:
 All of these sections can be modified freely to produce your intended forecast.
 
 [**`index.qmd`**](./index.qmd) defines the `index.html` page for the final generated forecast report.
-This file should always start with `source("forecast.R")` to run the forecast and load in all relevant functions, but most subsections will only call printing or plotting functions (as defined in the "Forecast Visualizations" section of `forecast.R`).
+This file should always start with `source("functions.R")` to run the forecast and load in all relevant functions, but most subsections will only call printing or plotting functions (as defined in the "Forecast Visualizations" section of `functions.R`).
 By dividing the "business" logic from the HTML render logic, we make it easier to run the code outside of the Quarto file and also allow multiple web pages to show different visualizations from the same forecast run.
 This file can also be freely customized to your needs.
 

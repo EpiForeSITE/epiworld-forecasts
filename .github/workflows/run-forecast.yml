@@ -43,7 +43,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Render forecast quarto site
-        run: quarto render
+        run: |
+          quarto render
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4

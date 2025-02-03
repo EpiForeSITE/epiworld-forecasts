@@ -151,40 +151,7 @@ get_season_starts <- function(dates) {
 }
 
 
-## --------------------------------------------------------------------
-## MODEL DEFINITION
-## --------------------------------------------------------------------
 
-# Define forecast parameters
-n_days <- 90 # Calibrate model last 90 days of data
-
-# Get COVID-19 data
-covid_data <- get_covid_data(n_days)
-# Compute start date for each season
-seasons <- get_season_starts(covid_data$Date)
-# Get observed case counts
-covid_cases <- covid_data$Daily.Cases
-
-# Define SIRCONN model parameters
-model_seed          <- 112      # Random seed
-model_ndays         <- n_days   # How many days to run the model
-model_n             <- 10000    # model population size
-
-# Define initial disease parameters
-init_prevalence <- covid_cases[1] / model_n
-init_contact_rate <- 10
-init_transmission_rate <- 0.05
-init_recovery_rate <- 1 / 7
-
-# Create the SIRCONN model
-covid_sirconn_model <- ModelSIRCONN(
-  name              = "COVID-19",
-  n                 = model_n,
-  prevalence        = init_prevalence,
-  contact_rate      = init_contact_rate,
-  transmission_rate = init_transmission_rate,
-  recovery_rate     = init_recovery_rate
-)
 
 
 ## --------------------------------------------------------------------
@@ -390,93 +357,6 @@ get_params_sample <- function(lfmcmc_obj, total_samples, burnin, sample_size) {
   return(params_sample)
 }
 
-# Define LFMCMC parameters
-lfmcmc_n_samples <- 6000   # number of LFMCMC iterations
-lfmcmc_burnin <- 2000    # burn-in period
-lfmcmc_epsilon <- 0.25
-
-init_lfmcmc_params <- c(
-  1 / 7,  # r_rate
-  0.05,   # t_rate_spring
-  0.04,   # t_rate_summer
-  0.06,   # t_rate_fall
-  0.07,   # t_rate_winter
-  10,     # c_rate_weekday
-  2       # c_rate_weekend
-)
-param_names <- c(
-  "Recovery rate",
-  "Transmission rate (spring)",
-  "Transmission rate (summer)",
-  "Transmission rate (fall)",
-  "Transmission rate (winter)",
-  "Contact rate (weekday)",
-  "Contact rate (weekend)"
-)
-
-stats_names <- c(
-  "Time to peak",
-  "Size of peak",
-  "Mean (cases)",
-  "Standard deviation (cases)"
-)
-
-
-## --------------------------------------------------------------------
-## RUN MODEL CALIBRATION
-## --------------------------------------------------------------------
-
-# Create the LFMCMC object
-calibration_lfmcmc <- LFMCMC(covid_sirconn_model) |>
-  set_simulation_fun(lfmcmc_simulation_fun) |>
-  set_summary_fun(lfmcmc_summary_fun) |>
-  set_proposal_fun(lfmcmc_proposal_fun) |>
-  set_kernel_fun(lfmcmc_kernel_fun) |>
-  set_observed_data(covid_cases)
-
-# Run LFMCMC calibration
-verbose_off(calibration_lfmcmc)
-run_lfmcmc(
-  lfmcmc = calibration_lfmcmc,
-  params_init = init_lfmcmc_params,
-  n_samples = lfmcmc_n_samples,
-  epsilon = lfmcmc_epsilon,
-  seed = model_seed
-)
-set_params_names(calibration_lfmcmc, param_names)
-set_stats_names(calibration_lfmcmc, stats_names)
-
-
-## --------------------------------------------------------------------
-## RUN FORECAST
-## --------------------------------------------------------------------
-
-# Create a new SIR CONN model
-# - Compute prevalance based on most recent day
-forecast_prevalence <- covid_cases[90] / model_n
-# - Init the model
-covid_sirconn_model <- ModelSIRCONN(
-  name              = "COVID-19",
-  n                 = model_n,
-  prevalence        = forecast_prevalence,
-  contact_rate      = init_contact_rate,
-  transmission_rate = init_transmission_rate,
-  recovery_rate     = init_recovery_rate
-)
-
-# Run the simulation for each set of params in the sample
-# - Select sample of accepted params from LFMCMC
-forecast_sample_n <- 200 # Sample size
-params_sample <- get_params_sample(calibration_lfmcmc,
-  lfmcmc_n_samples,
-  lfmcmc_burnin,
-  forecast_sample_n)
-# - Set forecast length
-model_ndays <- 14
-# - Run simulation function for each set of params from the sample
-forecast_dist <- apply(params_sample, 1, lfmcmc_simulation_fun)
-
-
 ## --------------------------------------------------------------------
 ## FORECAST VISUALIZATIONS
 ## --------------------------------------------------------------------
@@ -518,7 +398,12 @@ plot_covid_data <- function(data) {
 #' @param seasons The dictionary of season start positions.
 #'
 #' @returns The plot of the posterior distribution of model parameters.
-plot_lfmcmc_post_dist <- function(lfmcmc_object, init_params, param_names, seasons) {
+plot_lfmcmc_post_dist <- function(
+    lfmcmc_object,
+    init_params,
+    param_names,
+    seasons
+    ) {
 
   accepted_params <- get_all_accepted_params(lfmcmc_object)
   accepted_params <- lapply(seq_along(param_names), \(i) {
@@ -594,11 +479,20 @@ plot_lfmcmc_post_dist <- function(lfmcmc_object, init_params, param_names, seaso
 #'
 #' @param forecast_dist An array of forecasted case counts.
 #' @param covid_data A data frame of observed COVID-19 case counts.
+#' @param probs A numeric vector of probabilities for credible interval.
 #'
 #' @returns The plot of the forecasted COVID-19 case counts.
-plot_forecast <- function(forecast_dist, covid_data) {
+plot_forecast <- function(
+    forecast_dist,
+    covid_data,
+    probs = c(0.025, 0.25, 0.5, 0.75, 0.975)
+    ) {
   # Find 2.5%, 25%, 50%, 75%, and 97.5% quantiles
-  forecast_quantiles <- apply(forecast_dist, 1, quantile, probs = c(0.025, 0.25, 0.5, 0.75, 0.975))
+  forecast_quantiles <- apply(
+    forecast_dist, 1,
+    quantile,
+    probs = probs
+  )
 
   # Combine observed data with sample median for plotting forecast
   observed_df <- data.frame(
@@ -641,8 +535,10 @@ plot_forecast <- function(forecast_dist, covid_data) {
     geom_line(aes(y = counts,
       color = observed)) +
     labs(x = "Date", y = "Daily Cases") +
-    scale_colour_manual(values = cbb_palette,
-      labels = c("Forecasted Cases", "Observed Cases")) +
+    scale_colour_manual(
+      values = cbb_palette,
+      labels = c("Forecasted Cases (median)", "Observed Cases")
+    ) +
     scale_y_continuous(n.breaks = 20) +
     theme_bw()
 }
