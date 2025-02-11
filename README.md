@@ -68,12 +68,13 @@ This file can also be freely customized to your needs.
 [**`run-forecast.yml`**](./.github/workflows/run-forecast.yml) contains the GitHub Actions workflow for running the forecast automatically.
 This includes setting the schedule and uploading the HTML forecast report to GitHub Pages, which is what you will most likely be modifying for your project.
 Take careful consideration before modifying anything other than the container, the schedule, and publishing destination to avoid breaking the workflow.
-Also, **note** that while this workflow will work immediately after copying the template repository (and will be available under "Deployments"), the website URL won't be immediately visible on the main repo page.
+- Note that while this workflow will work immediately after copying the template repository (and will be available under "Deployments"), the website URL won't be immediately visible on the main repo page.
 This can be added by editing the "About" section (clicking the gear icon) and checking the box for "Use your GitHub Pages website".
 
 [**`Dockerfile`**](./.devcontainer/Dockerfile) defines the Docker image for running the forecast.
 This should contain all the packages you need for your forecast (e.g., `epiworldR`, `ggplot2`, etc.).
 We have a separate GHA workflow file for [building the Docker image](./.github/workflows/build-docker-image.yml) from the Dockerfile so it can be used by the GHAs.
+
 Once you copy the template repository, the `build-docker-image` workflow will create the Docker image for your new repository.
 Consequently, you'll need to modify the [container in `run-forecast.yml`](https://github.com/EpiForeSITE/epiworld-forecasts/blob/0ef3472bd5084bb3a95a646e07d218cd2154725a/.github/workflows/run-forecast.yml#L36) to the newly built docker image:
 ```
