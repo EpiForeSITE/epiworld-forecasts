@@ -34,7 +34,7 @@ The above technologies power the `epiworld-forecasts` pipeline which can be adap
 * Forecast schedules
 * Docker containers
 
-You adjust the tool for your projects by modifying the following key files:
+You adjust the tool for your projects by first [creating a new repo from this template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template) and then modifying the following key files:
 
 [**`forecast.R`**](./forecast.R) contains the core logic for the forecast divided up into the following sections:
 
@@ -47,24 +47,26 @@ You adjust the tool for your projects by modifying the following key files:
 * *Run Forecast:* Runs the forecast with the calibrated model
 * *Forecast Visualizations:* Defines functions for visualizing forecast data
 
-You will replace or modify our example forecast code to produce your intended forecast.
-
 [**`index.qmd`**](./index.qmd) defines the `index.html` page for the final generated forecast report.
 
 * This file should always start with `source("forecast.R")` to run the forecast and source all relevant functions, but subsections will only call printing or plotting functions (e.g., those defined under "Forecast Visualizations" in `forecast.R`).
-* By dividing the "business" logic from the HTML rendering logic, we make it easier to run the code outside of the Quarto file, making it easier to test the forecast without rendering the entire webpage.
+* By dividing the "business" logic from the HTML rendering logic, we make it easier to run the code outside of the Quarto file (i.e. without rendering the entire webpage).
 This also allows multiple web pages to show different visualizations from the same forecast run.
-* You will update this file to produce your own forecast report.
+* Our example (below) features additional [Methodology](./methodology.qmd) and [About](./about.qmd) pages, but these are not required for your project.
+Adjust the global website settings in the [`_quarto.yml`](./_quarto.yml) file.
 
 [**`run-forecast.yml`**](./.github/workflows/run-forecast.yml) contains the GitHub Actions workflow for running the forecast automatically.
 
-* This includes setting the schedule and publishing the report (our example uploads the HTML forecast to GitHub Pages).
-* This can be adapted to simply produce a downloadable data file, rather than publishing a public website, but be careful when modifying anything other than the container, the schedule, and publishing destination to avoid breaking the workflow.
+* This includes setting the schedule and publishing the report.
+* While our example (below) uploads the HTML forecast to GitHub Pages, this workflow can be adapted to simply produce a downloadable data file, rather than publishing a public website.
+* Be careful when modifying anything other than the container, the schedule, and publishing destination to avoid breaking the workflow.
 
 [**`Dockerfile`**](./.devcontainer/Dockerfile) defines the Docker image for running the forecast.
 
 * This should contain all the packages you need for your forecast (e.g., `epiworldR`, `ggplot2`, etc.).
 * We have a separate GHA workflow file for [building the Docker image](./.github/workflows/build-docker-image.yml) from the Dockerfile so it can be used by the GHAs.
+
+#### Implementation Note
 
 Once you copy the template repository, the `build-docker-image` workflow will create the Docker image for your new repository.
 Consequently, you'll need to modify the [container in `run-forecast.yml`](https://github.com/EpiForeSITE/epiworld-forecasts/blob/0ef3472bd5084bb3a95a646e07d218cd2154725a/.github/workflows/run-forecast.yml#L36) to the newly built docker image:
@@ -77,9 +79,6 @@ Consequently, you'll need to modify the [container in `run-forecast.yml`](https:
       contents: write
 ```
 Otherwise, your project will continue to use our `epiworld-forecasts` Docker image.
-
-Our example features additional [Methodology](./methodology.qmd) and [About](./about.qmd) pages, but these are not required for your project.
-Adjust the global website settings in the [`_quarto.yml`](./_quarto.yml) file.
 
 
 ## Example Forecast
