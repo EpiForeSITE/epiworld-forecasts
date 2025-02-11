@@ -16,6 +16,8 @@ Disease forecasts typically follow these steps:
 
 ### Technologies
 
+`epiworld-forecasts` is powered by these technologies:
+
 1. [**`epiworldR`**](https://github.com/UofUEpiBio/epiworldR/): R package for fast agent-based model (ABM) disease simulations
 2. **Docker:** Contains all the software packages needed to run the forecast
 3. **GitHub Actions:** Runs the forecast inside the Docker container, manages the schedule of forecast runs, builds and pushes the Docker image to the GitHub Container Registry
@@ -24,7 +26,7 @@ Disease forecasts typically follow these steps:
 
 ### Adapting to Your Needs
 
-The above technologies power the `epiworld-forecasts` pipeline which can be adapted for different:
+The `epiworld-forecasts` pipeline which can be adapted for different:
 
 * Data sources
 * Model calibrations
