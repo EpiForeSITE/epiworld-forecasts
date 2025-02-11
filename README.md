@@ -76,9 +76,8 @@ Consequently, you'll need to modify the [container in `run-forecast.yml`](https:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    container: ghcr.io/epiforesite/epiworld-forecasts -> change to "ghcr.io/<your_org_name>/<your_repo_name>"
-    permissions:
-      contents: write
+    # NOTE: Change the container below to "ghcr.io/<your_org_name>/<your_repo_name>" (all lowercase)
+    container: ghcr.io/epiforesite/epiworld-forecasts
 ```
 Otherwise, your project will continue to use our `epiworld-forecasts` Docker image.
 
@@ -90,6 +89,8 @@ This is a 14-day forecast of COVID-19 case counts in Utah using data [published 
 The forecast updates weekly and is published to [this website](https://epiforesite.github.io/epiworld-forecasts/).
 
 ![](assets/process-flow-chart.png)
+
+See [this presentation](https://github.com/EpiForeSITE/software/blob/89b3110492bba30cd324f580fef0ed3d846ac26f/docs/presentations/epiworld-forecasts-2025-02-10.pdf) for more information on `epiworld-forecasts`.
 
 
 ## Code of Conduct
