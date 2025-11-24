@@ -39,7 +39,7 @@ The `epiworld-forecasts` pipeline which can be adapted for different:
 
 You adjust the tool for your projects by first [creating a new repo from this template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template) and then modifying the following key files:
 
-[**`function.R`**](./functions.R) contains the core logic for the forecast divided up into the following sections:
+[**`functions.R`**](./functions.R) contains the core logic for the forecast divided up into the following sections:
 * *Libraries:* Loads required libraries, such as `epiworldR` and `ggplot2`
 * *Gather Data:* Defines functions for getting the data to calibration the forecast
 * *Process Data:* Defines functions for processing data for the forecast
