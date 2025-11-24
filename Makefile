@@ -15,7 +15,7 @@ help:
 
 
 build:
-	$(CNTR) build -t epiforecasts -f .devcontainer/Dockerfile
+	$(CNTR) build -t epiforecasts -f .devcontainer/Dockerfile .
 
 run:
 	$(CNTR) run -it --rm \
@@ -26,4 +26,4 @@ run:
 run_git:
 	$(MAKE) run SSH_AUTH=$(HOME)/.ssh
 
-.PHONY: help build run
+.PHONY: help build run run_git
