@@ -33,6 +33,7 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    # NOTE: Change the container below to "ghcr.io/<your_org_name>/<your_repo_name>" (all lowercase)
     container: ghcr.io/epiforesite/epiworld-forecasts
     permissions:
       contents: write
