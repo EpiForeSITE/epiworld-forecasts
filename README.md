@@ -52,8 +52,6 @@ You adjust the tool for your projects by first [creating a new repo from this te
 [**`index.qmd`**](./index.qmd) defines the `index.html` page for the final generated forecast report.
 
 * This file should always start with `source("functions.R")` to run the forecast and load in all relevant functions, but most subsections will only call printing or plotting functions (as defined in the "Forecast Visualizations" section of `functions.R`).
-By dividing the "business" logic from the HTML render logic, we make it easier to run the code outside of the Quarto file and also allow multiple web pages to show different visualizations from the same forecast run.
-This file can also be freely customized to your needs.
 * By dividing the "business" logic from the HTML rendering logic, we make it easier to run the code outside of the Quarto file (i.e. without rendering the entire webpage).
 This also allows multiple web pages to show different visualizations from the same forecast run.
 * Our example (below) features additional [Methodology](./methodology.qmd) and [About](./about.qmd) pages, but these are not required for your project.

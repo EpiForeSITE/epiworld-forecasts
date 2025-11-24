@@ -149,7 +149,7 @@ set_params_names(calibration_lfmcmc, param_names)
 set_stats_names(calibration_lfmcmc, stats_names)
 ```
 
-When the simulation is finished, we use a burn-in period of n = 2,000 (33% of simulation iterations). The epiworldR results printout (below) shows the mean parameter/statistic value, the 95% credible interval (in `[ ]`), and the initial/observed value (in `( )`).
+When the simulation is finished, we use a burn-in period of n = 2,000 (50% of simulation iterations). The epiworldR results printout (below) shows the mean parameter/statistic value, the 95% credible interval (in `[ ]`), and the initial/observed value (in `( )`).
 
 ```{r}
 #| label: print-lfmcmc-results
@@ -195,7 +195,7 @@ We can now run the forecast.
 ```{r}
 #| label: run-forecast
 # Create a new SIR CONN model
-# - Compute prevalance based on most recent day
+# - Compute prevalence based on most recent day
 forecast_prevalence <- covid_cases[90] / model_n
 # - Init the model
 covid_sirconn_model <- ModelSIRCONN(
