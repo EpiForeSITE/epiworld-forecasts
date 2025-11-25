@@ -10,7 +10,7 @@ RUN apt-get update && \
 # Install epiworldR
 RUN installGithub.r UofUEpiBio/epiworldR@30afdce
 
-RUN install2.r languageserver
+RUN install2.r languageserver quarto
 
 # Run Bash
 CMD ["bash"]
