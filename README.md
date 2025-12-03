@@ -39,8 +39,7 @@ The `epiworld-forecasts` pipeline which can be adapted for different:
 
 You adjust the tool for your projects by first [creating a new repo from this template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template) and then modifying the following key files:
 
-[**`forecast.R`**](./forecast.R) contains the core logic for the forecast divided up into the following sections:
-
+[**`functions.R`**](./functions.R) contains the core logic for the forecast divided up into the following sections:
 * *Libraries:* Loads required libraries, such as `epiworldR` and `ggplot2`
 * *Gather Data:* Defines functions for getting the data to calibration the forecast
 * *Process Data:* Defines functions for processing data for the forecast
@@ -52,11 +51,12 @@ You adjust the tool for your projects by first [creating a new repo from this te
 
 [**`index.qmd`**](./index.qmd) defines the `index.html` page for the final generated forecast report.
 
-* This file should always start with `source("forecast.R")` to run the forecast and source all relevant functions, but subsections will only call printing or plotting functions (e.g., those defined under "Forecast Visualizations" in `forecast.R`).
+* This file should always start with `source("functions.R")` to run the forecast and load in all relevant functions, but most subsections will only call printing or plotting functions (as defined in the "Forecast Visualizations" section of `functions.R`).
 * By dividing the "business" logic from the HTML rendering logic, we make it easier to run the code outside of the Quarto file (i.e. without rendering the entire webpage).
 This also allows multiple web pages to show different visualizations from the same forecast run.
 * Our example (below) features additional [Methodology](./methodology.qmd) and [About](./about.qmd) pages, but these are not required for your project.
 Adjust the global website settings in the [`_quarto.yml`](./_quarto.yml) file.
+
 
 [**`run-forecast.yml`**](./.github/workflows/run-forecast.yml) contains the GitHub Actions workflow for running the forecast automatically.
 
